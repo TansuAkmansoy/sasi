@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#F3E3C7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sasi">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<title>Sasi</title>
+<style>
+  :root {
+    --bg: #FBF7F0; --surface: #fff; --surface2: #F3E3C7; --border: #E6DCCB;
+    --text: #1F2A30; --text2: #5B6870; --text3: #8A959B;
+    --primary: #0F8C93; --primarySoft: #D7F1F2; --deep: #0A5E6B;
+    --sun: #F6C56F; --sunSoft: #FDF0D5; --terra: #C9612F; --terraSoft: #FBE4D8;
+    --danger: #C53B3B; --dangerSoft: #FBE1E1; --ok: #2E8B57; --okSoft: #DDF2E5; --weekend: #F7F1E6;
+    --busy: #0F8C93; --free: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0E171B; --surface: #162227; --surface2: #22323A; --border: #2A3B43;
+      --text: #ECF2F3; --text2: #A9B8BE; --text3: #7A8A91;
+      --primary: #2CC2C9; --primarySoft: #123E43; --deep: #7FD9DD;
+      --sunSoft: #3D3220; --terraSoft: #3E2519; --terra: #F08E5F; --dangerSoft: #3D1E1E; --danger: #F07373;
+      --okSoft: #183325; --ok: #5BC98A; --weekend: #1A282E; --busy: #2CC2C9; --free: #162227;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-text-size-adjust: 100%; }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 16px 16px calc(40px + env(safe-area-inset-bottom)); }
+  header.top { display: flex; align-items: center; gap: 12px; padding: calc(8px + env(safe-area-inset-top)) 0 12px; }
+  header.top img { width: 44px; height: 44px; border-radius: 11px; }
+  header.top h1 { font-size: 20px; margin: 0; line-height: 1.2; }
+  header.top .sub { color: var(--text2); font-size: 13px; }
+  header.top .sp { flex: 1; }
+  button, .chip { font: inherit; }
+  .chip { display: inline-flex; align-items: center; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 999px; padding: 7px 14px; margin: 0 6px 8px 0; cursor: pointer; min-height: 38px; font-size: 14px; }
+  .chip.on { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+  .muted { color: var(--text2); }
+  .small { font-size: 13px; }
+  .tiny { font-size: 12px; color: var(--text3); }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+  .row b { font-variant-numeric: tabular-nums; text-align: right; }
+  .monthbar { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 12px; }
+  .monthbar h2 { margin: 0; font-size: 19px; }
+  .nav { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 22px; cursor: pointer; }
+  .seg { display: flex; background: var(--surface2); border-radius: 12px; padding: 3px; margin-bottom: 14px; }
+  .seg button { flex: 1; border: 0; background: transparent; color: var(--text2); padding: 10px 6px; border-radius: 9px; font-weight: 600; cursor: pointer; }
+  .seg button.on { background: var(--surface); color: var(--text); }
+  .msg { text-align: center; padding: 60px 20px; }
+  .msg h2 { margin: 12px 0 6px; }
+  /* müsaitlik takvimi */
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+  .cal .wd { text-align: center; font-size: 12px; color: var(--text3); font-weight: 600; padding-bottom: 2px; }
+  .cal .d { aspect-ratio: 1 / 0.86; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; background: var(--free); border: 1px solid var(--border); position: relative; overflow: hidden; }
+  .cal .d span { position: relative; z-index: 1; }
+  .cal .d.full { background: var(--busy); color: #fff; border-color: var(--busy); }
+  .cal .d.in { background: linear-gradient(135deg, var(--free) 50%, var(--busy) 50%); }
+  .cal .d.out { background: linear-gradient(135deg, var(--busy) 50%, var(--free) 50%); }
+  .cal .d.inout { background: linear-gradient(135deg, var(--busy) 46%, var(--free) 46%, var(--free) 54%, var(--busy) 54%); }
+  .cal .d.past { opacity: .35; }
+  .cal .d.today { outline: 2px solid var(--sun); outline-offset: -2px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 10px 0 4px; font-size: 13px; color: var(--text2); }
+  .legend i { display: inline-block; width: 18px; height: 14px; border-radius: 4px; border: 1px solid var(--border); vertical-align: -2px; margin-right: 6px; }
+  .villa-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .villa-h h3 { margin: 0; font-size: 17px; }
+  .free-badge { color: var(--ok); font-weight: 600; font-size: 13px; }
+  /* yönetici çizelgesi */
+  .tl { display: flex; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .tl .names { flex: 0 0 86px; border-right: 1px solid var(--border); }
+  .tl .names div { height: 56px; display: flex; align-items: center; padding: 0 8px; font-weight: 700; font-size: 13px; border-bottom: 1px solid var(--border); }
+  .tl .names div:first-child { height: 40px; }
+  .tl .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tl .grid { position: relative; }
+  .tl .hrow { display: flex; height: 40px; border-bottom: 1px solid var(--border); }
+  .tl .hrow div { flex: 0 0 38px; text-align: center; font-size: 11px; color: var(--text3); line-height: 1.15; padding-top: 5px; }
+  .tl .hrow div b { display: block; font-size: 13px; color: var(--text); }
+  .tl .vrow { position: relative; height: 56px; border-bottom: 1px solid var(--border); display: flex; }
+  .tl .vrow .c { flex: 0 0 38px; border-right: 1px solid var(--border); }
+  .tl .we { background: var(--weekend); }
+  .tl .td { background: var(--sunSoft) !important; }
+  .tl .bar { position: absolute; top: 10px; height: 36px; border-radius: 9px; border: 1.5px solid; padding: 0 6px; font-size: 12px; font-weight: 700; display: flex; align-items: center; white-space: nowrap; overflow: hidden; cursor: pointer; }
+  .bar.confirmed { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .bar.option { background: var(--sunSoft); border-color: var(--sun); border-style: dashed; color: var(--text); }
+  .bar.completed { background: var(--deep); border-color: var(--deep); color: var(--bg); }
+  /* kayıt kartı */
+  .rc { cursor: pointer; }
+  .rc .t { display: flex; justify-content: space-between; gap: 10px; }
+  .rc .t b:first-child { font-size: 16px; }
+  .badge { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; margin: 6px 6px 0 0; border: 1px solid transparent; }
+  .b-confirmed { background: var(--primarySoft); color: var(--deep); border-color: var(--primary); }
+  .b-option { background: var(--sunSoft); color: var(--text); border-color: var(--sun); }
+  .b-completed { background: var(--deep); color: var(--bg); }
+  .b-cancelled, .b-option_released { background: var(--dangerSoft); color: var(--danger); border-color: var(--danger); }
+  .b-warn { background: var(--terraSoft); color: var(--terra); }
+  .detail { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 8px; }
+  .detail h4 { margin: 10px 0 4px; font-size: 13px; color: var(--text2); text-transform: uppercase; letter-spacing: .4px; }
+  input.search { width: 100%; font: inherit; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); margin-bottom: 10px; }
+  .lang { border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 10px; padding: 8px 10px; font-weight: 700; cursor: pointer; }
+  .demo { background: var(--sunSoft); border: 1px solid var(--sun); border-radius: 10px; padding: 8px 12px; font-size: 13px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="msg"><p class="muted">Yükleniyor… / Loading…</p></div></div>
+<script>
+'use strict';
+// =====================================================================
+// Sasi paylaşım sayfası. Bağlantının # kısmı sunucuya gönderilmez:
+//   #u=<supabase adresi>&k=<anon anahtar>&t=<paylaşım anahtarı>
+// Veri, share_view(token) fonksiyonundan okunur; anahtar iptal
+// edildiğinde sayfa hiçbir şey göstermez.
+// =====================================================================
+const $app = document.getElementById('app');
+const P = new URLSearchParams(location.hash.slice(1));
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ---------- tarih ----------
+const pd = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+const isoD = (d) => d.toISOString().slice(0, 10);
+const addDays = (s, n) => { const d = pd(s); d.setUTCDate(d.getUTCDate() + n); return isoD(d); };
+const mk = (y, m, d) => isoD(new Date(Date.UTC(y, m - 1, d)));
+const dim = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const wdMon = (s) => (pd(s).getUTCDay() + 6) % 7;
+const nightsOf = (a, b) => Math.round((pd(b) - pd(a)) / 86400000);
+const localToday = () => { const n = new Date(); return mk(n.getFullYear(), n.getMonth() + 1, n.getDate()); };
+const addMonths = (y, m, n) => { const t = y * 12 + (m - 1) + n; return { y: Math.floor(t / 12), m: (t % 12) + 1 }; };
+
+const L = {
+  tr: {
+    months: ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'],
+    mShort: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+    wd: ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'],
+    title: 'Müsaitlik takvimi', sub: 'Kalkan · Kaş',
+    free: 'Boş', busy: 'Dolu', change: 'Giriş/çıkış günü',
+    times: 'Giriş 16:00 · Çıkış 10:00. Yarı dolu gün: o gün çıkış ya da giriş var; diğer yarısı kullanılabilir.',
+    freeNights: (n) => `${n} boş gece`,
+    updated: 'Güncel durum', prev: 'Önceki ay', next: 'Sonraki ay',
+  },
+  en: {
+    months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    mShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    wd: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    title: 'Availability', sub: 'Kalkan · Kaş, Turkey',
+    free: 'Available', busy: 'Booked', change: 'Changeover day',
+    times: 'Check-in 16:00 · Check-out 10:00. Half-filled days are changeover days; the other half is available.',
+    freeNights: (n) => `${n} night${n === 1 ? "" : "s"} free`,
+    updated: 'Live status', prev: 'Previous month', next: 'Next month',
+  },
+};
+let lang = (P.get('l') || navigator.language || 'tr').toLowerCase().startsWith('tr') ? 'tr' : 'en';
+const fmt = (s, y = true) => { if (!s) return '—'; const d = pd(s); const T = L.tr; return `${d.getUTCDate()} ${T.mShort[d.getUTCMonth()]}${y ? ' ' + d.getUTCFullYear() : ''}`; };
+const fmtR = (a, b) => `${fmt(a, a.slice(0, 4) !== b.slice(0, 4))} → ${fmt(b)}`;
+
+// ---------- para ----------
+const SYM = { TRY: '₺', EUR: '€', GBP: '£', USD: '$' };
+function money(minor, cur) {
+  const v = Math.round(minor || 0), neg = v < 0, a = Math.abs(v), w = Math.floor(a / 100), f = a % 100;
+  return `${neg ? '−' : ''}${String(w).replace(/\B(?=(\d{3})+(?!\d))/g, '.')}${f ? ',' + String(f).padStart(2, '0') : ''} ${SYM[cur] || cur}`;
+}
+const totalsText = (t) => Object.keys(t).filter((c) => t[c]).map((c) => money(t[c], c)).join(' · ') || '—';
+const addTo = (t, c, v) => { t[c] = (t[c] || 0) + v; };
+function moneyOf(r) {
+  let received = 0, refunded = 0, unconverted = false;
+  for (const p of r.payments || []) {
+    let v = p.currency === r.currency ? Number(p.amount_minor) : (p.rate ? Math.round(Number(p.amount_minor) * Number(p.rate)) : null);
+    if (v == null) { unconverted = true; continue; }
+    if (p.kind === 'refund') refunded += v; else received += v;
+  }
+  const gross = Number(r.gross_minor || 0);
+  const commission = !r.agency_id ? 0 : r.commission_minor != null ? Number(r.commission_minor) : r.commission_pct != null ? Math.round(gross * Number(r.commission_pct) / 100) : 0;
+  const net = received - refunded;
+  const closed = r.status === 'cancelled' || r.status === 'option_released';
+  return { received, refunded, net, remaining: closed ? 0 : Math.max(0, gross - net), commission, netIncome: gross - commission, unconverted };
+}
+const STATUS = { option: 'Opsiyon', confirmed: 'Onaylı', completed: 'Tamamlandı', cancelled: 'İptal', option_released: 'Opsiyon bırakıldı' };
+const KIND = { deposit: 'Ön ödeme', interim: 'Ara ödeme', balance: 'Kalan ödeme', refund: 'İade' };
+const METHOD = { cash: 'Nakit', transfer: 'Havale/EFT', card: 'Kredi kartı', agency: 'Acente üzerinden', other: 'Diğer' };
+const REFUND = { pending: 'İade bekliyor', refunded: 'İade edildi', none: 'İade yok' };
+const ACTIVE = ['option', 'confirmed', 'completed'];
+
+// ---------- veri ----------
+async function load() {
+  if (P.get('demo')) return demoData(P.get('m') === 'a' ? 'admin' : 'availability');
+  const u = P.get('u'), k = P.get('k'), t = P.get('t');
+  if (!u || !k || !t) throw new Error('missing');
+  const headers = { apikey: k, 'Content-Type': 'application/json' };
+  if (k.startsWith('eyJ')) headers.Authorization = 'Bearer ' + k;
+  const res = await fetch(u.replace(/\/$/, '') + '/rest/v1/rpc/share_view', { method: 'POST', headers, body: JSON.stringify({ p_token: t }) });
+  if (!res.ok) throw new Error('http ' + res.status);
+  const data = await res.json();
+  if (!data) throw new Error('invalid');
+  return data;
+}
+
+function demoData(kind) {
+  const t = localToday();
+  const R = (o) => Object.assign({ id: Math.random().toString(36).slice(2), status: 'confirmed', currency: 'EUR', gross_minor: 0, payments: [], registry_done: false }, o);
+  const reservations = [
+    R({ villa_id: 'v1', check_in: addDays(t, -9), check_out: addDays(t, -2), guest_name: 'Emma Wilson', currency: 'GBP', gross_minor: 420000, status: 'completed', agency_id: 'a', agency_name: 'Kalkan Holidays', commission_pct: 15, registry_done: true, registry_date: addDays(t, -9), invoice_date: addDays(t, -2), payments: [{ kind: 'deposit', amount_minor: 120000, currency: 'GBP', method: 'transfer', paid_on: addDays(t, -60) }, { kind: 'balance', amount_minor: 300000, currency: 'GBP', method: 'cash', paid_on: addDays(t, -9) }] }),
+    R({ villa_id: 'v1', check_in: addDays(t, -2), check_out: addDays(t, 5), guest_name: 'Mehmet Yılmaz', guest_phone: '+90 532 000 00 00', guests_count: 6, gross_minor: 350000, registry_done: true, registry_date: addDays(t, -2), payments: [{ kind: 'deposit', amount_minor: 100000, currency: 'EUR', method: 'transfer', paid_on: addDays(t, -40) }] }),
+    R({ villa_id: 'v2', check_in: t, check_out: addDays(t, 10), guest_name: 'James Brown', guests_count: 4, gross_minor: 600000, agency_id: 'b', agency_name: 'Villa Agency UK', commission_pct: 20, payments: [{ kind: 'deposit', amount_minor: 200000, currency: 'EUR', method: 'agency', paid_on: addDays(t, -30) }] }),
+    R({ villa_id: 'v3', status: 'option', option_until: addDays(t, 1), check_in: addDays(t, 12), check_out: addDays(t, 19), guest_name: 'Sophie Taylor', currency: 'GBP', gross_minor: 304000 }),
+    R({ villa_id: 'v1', check_in: addDays(t, 5), check_out: addDays(t, 13), guest_name: 'Ayşe Demir', gross_minor: 457100, note: 'Havalimanı transferi istendi' }),
+    R({ villa_id: 'v2', status: 'cancelled', check_in: addDays(t, 20), check_out: addDays(t, 27), guest_name: 'Oliver Smith', gross_minor: 420000, cancel_date: addDays(t, -3), cancel_reason: 'Uçuş iptali', refund_status: 'pending', deduction_minor: 50000, payments: [{ kind: 'deposit', amount_minor: 100000, currency: 'EUR', method: 'transfer', paid_on: addDays(t, -50) }] }),
+  ];
+  const villas = [{ id: 'v1', name: 'Villa Poyraz' }, { id: 'v2', name: 'Villa Seascape' }, { id: 'v3', name: 'Villa Shipahoy' }];
+  if (kind === 'admin') return { kind: 'admin', label: 'Örnek', today: t, villas, reservations, demo: true };
+  return { kind: 'availability', today: t, demo: true, villas: villas.map((v) => ({ name: v.name, busy: reservations.filter((r) => r.villa_id === v.id && ACTIVE.includes(r.status)).map((r) => [r.check_in, r.check_out]) })) };
+}
+
+// ---------- müsaitlik görünümü ----------
+let view;
+function renderAvailability(d) {
+  const T = L[lang];
+  const today = localToday();
+  const sets = d.villas.map((v) => { const s = new Set(); for (const [a, b] of v.busy) for (let x = a; x < b; x = addDays(x, 1)) s.add(x); return { name: v.name, s }; });
+  const n = dim(view.y, view.m);
+  let h = `<header class="top"><img src="favicon.png" alt=""><div><h1>${T.title}</h1><div class="sub">${T.sub}</div></div><div class="sp"></div><button class="lang" id="lang">${lang === 'tr' ? 'EN' : 'TR'}</button></header>`;
+  if (d.demo) h += `<div class="demo">Örnek görünüm · Sample preview</div>`;
+  h += `<div class="monthbar"><button class="nav" id="prev" aria-label="${T.prev}">‹</button><h2>${T.months[view.m - 1]} ${view.y}</h2><button class="nav" id="next" aria-label="${T.next}">›</button></div>`;
+  h += `<div class="legend"><span><i style="background:var(--free)"></i>${T.free}</span><span><i style="background:var(--busy);border-color:var(--busy)"></i>${T.busy}</span><span><i style="background:linear-gradient(135deg,var(--free) 50%,var(--busy) 50%)"></i>${T.change}</span></div>`;
+  h += `<p class="tiny" style="margin:0 0 12px">${T.times}</p>`;
+  for (const v of sets) {
+    let free = 0, cells = '';
+    const lead = wdMon(mk(view.y, view.m, 1));
+    for (let i = 0; i < lead; i++) cells += '<div></div>';
+    for (let day = 1; day <= n; day++) {
+      const x = mk(view.y, view.m, day);
+      const eve = v.s.has(x), morn = v.s.has(addDays(x, -1));
+      if (!eve && x >= today) free++;
+      const cls = eve && morn ? 'full' : eve ? 'in' : morn ? 'out' : '';
+      const lbl = eve && morn ? T.busy : eve || morn ? T.change : T.free;
+      cells += `<div class="d ${cls}${x < today ? ' past' : ''}${x === today ? ' today' : ''}" title="${lbl}"><span>${day}</span></div>`;
+    }
+    h += `<div class="card"><div class="villa-h"><h3>${esc(v.name)}</h3><span class="free-badge">${free ? T.freeNights(free) : ''}</span></div><div class="cal">${T.wd.map((w) => `<div class="wd">${w}</div>`).join('')}${cells}</div></div>`;
+  }
+  h += `<p class="tiny" style="text-align:center">${T.updated}: ${new Date().toLocaleString(lang === 'tr' ? 'tr-TR' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' })}</p>`;
+  $app.innerHTML = h;
+  document.getElementById('prev').onclick = () => { view = addMonths(view.y, view.m, -1); renderAvailability(d); };
+  document.getElementById('next').onclick = () => { view = addMonths(view.y, view.m, 1); renderAvailability(d); };
+  document.getElementById('lang').onclick = () => { lang = lang === 'tr' ? 'en' : 'tr'; document.documentElement.lang = lang; renderAvailability(d); };
+}
+
+// ---------- yönetici görünümü ----------
+let tab = 'cal', filter = 'upcoming', query = '', year = Number(localToday().slice(0, 4)), open = new Set();
+function renderAdmin(d) {
+  const T = L.tr, today = localToday();
+  const vName = (id) => (d.villas.find((v) => v.id === id) || {}).name || '—';
+  let h = `<header class="top"><img src="favicon.png" alt=""><div><h1>Sasi · Kayıtlar</h1><div class="sub">Salt okunur · ${fmt(today)}</div></div><div class="sp"></div><button class="lang" id="reload" aria-label="Yenile">↻</button></header>`;
+  if (d.demo) h += `<div class="demo">Örnek veriler · gerçek kayıt değil</div>`;
+  h += `<div class="seg">${[['cal', 'Takvim'], ['list', 'Kayıtlar'], ['sum', 'Özet']].map(([k, l]) => `<button data-tab="${k}" class="${tab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+
+  if (tab === 'cal') {
+    const n = dim(view.y, view.m), first = mk(view.y, view.m, 1), W = 38;
+    h += `<div class="monthbar"><button class="nav" id="prev">‹</button><h2>${T.months[view.m - 1]} ${view.y}</h2><button class="nav" id="next">›</button></div>`;
+    let head = '', rows = '';
+    for (let i = 1; i <= n; i++) { const x = mk(view.y, view.m, i); head += `<div class="${wdMon(x) >= 5 ? 'we' : ''}${x === today ? ' td' : ''}">${T.wd[wdMon(x)]}<b>${i}</b></div>`; }
+    for (const v of d.villas) {
+      let cells = '';
+      for (let i = 1; i <= n; i++) { const x = mk(view.y, view.m, i); cells += `<div class="c ${wdMon(x) >= 5 ? 'we' : ''}${x === today ? ' td' : ''}"></div>`; }
+      let bars = '';
+      for (const r of d.reservations) {
+        if (r.villa_id !== v.id || !ACTIVE.includes(r.status)) continue;
+        const s = nightsOf(first, r.check_in) + 0.55, e = nightsOf(first, r.check_out) + 0.45;
+        if (e <= 0 || s >= n) continue;
+        const cs = Math.max(0, s), ce = Math.min(n, e);
+        bars += `<div class="bar ${r.status}" data-id="${esc(r.id)}" style="left:${cs * W}px;width:${(ce - cs) * W}px">${r.status === 'option' ? '⏱ ' : ''}${esc((ce - cs) * W > 70 ? r.guest_name : (r.guest_name || '').slice(0, 2))}</div>`;
+      }
+      rows += `<div class="vrow">${cells}${bars}</div>`;
+    }
+    h += `<div class="tl"><div class="names"><div></div>${d.villas.map((v) => `<div>${esc(v.name.replace(/^Villa\s+/i, ''))}</div>`).join('')}</div><div class="scroll" id="tlscroll"><div class="grid" style="width:${n * W}px"><div class="hrow">${head}</div>${rows}</div></div></div>`;
+    h += `<div class="legend"><span><i style="background:var(--primary)"></i>Onaylı</span><span><i style="background:var(--sunSoft);border:1.5px dashed var(--sun)"></i>Opsiyon</span><span><i style="background:var(--deep)"></i>Tamamlandı</span></div>`;
+    const monthRes = d.reservations.filter((r) => ACTIVE.includes(r.status) && r.check_in <= mk(view.y, view.m, n) && r.check_out > first);
+    h += `<h3 style="margin:18px 0 8px">Bu ay (${monthRes.length})</h3>` + monthRes.map((r) => card(r, vName, today)).join('');
+  }
+
+  if (tab === 'list') {
+    h += `<input class="search" id="q" placeholder="Misafir, telefon, acente, not…" value="${esc(query)}">`;
+    h += [['upcoming', 'Yaklaşan'], ['now', 'Şu an'], ['option', 'Opsiyon'], ['completed', 'Arşiv'], ['cancelled', 'İptal'], ['all', 'Tümü']].map(([k, l]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('');
+    const ql = query.trim().toLocaleLowerCase('tr-TR');
+    let list = d.reservations.filter((r) => {
+      switch (filter) {
+        case 'upcoming': return (r.status === 'confirmed' || r.status === 'option') && r.check_in > today;
+        case 'now': return ACTIVE.includes(r.status) && r.check_in <= today && r.check_out > today;
+        case 'option': return r.status === 'option';
+        case 'completed': return r.status === 'completed' || (r.status === 'confirmed' && r.check_out <= today);
+        case 'cancelled': return r.status === 'cancelled' || r.status === 'option_released';
+        default: return true;
+      }
+    }).filter((r) => !ql || [r.guest_name, r.guest_phone, r.guest_email, r.note, r.agency_name].some((x) => (x || '').toLocaleLowerCase('tr-TR').includes(ql)));
+    list.sort((a, b) => ['completed', 'cancelled', 'all'].includes(filter) ? b.check_in.localeCompare(a.check_in) : a.check_in.localeCompare(b.check_in));
+    h += `<p class="tiny">${list.length} kayıt</p>` + (list.length ? list.map((r) => card(r, vName, today)).join('') : '<p class="muted">Kayıt yok.</p>');
+  }
+
+  if (tab === 'sum') {
+    const years = [...new Set([year, ...d.reservations.map((r) => Number(r.check_in.slice(0, 4)))])].sort((a, b) => b - a);
+    h += years.map((y) => `<button class="chip ${y === year ? 'on' : ''}" data-y="${y}">${y}</button>`).join('');
+    const yr = d.reservations.filter((r) => Number(r.check_in.slice(0, 4)) === year);
+    const done = yr.filter((r) => r.status === 'completed' || r.status === 'confirmed' || r.status === 'option');
+    const g = {}, c = {}, nt = {}, got = {}, open_ = {};
+    for (const r of done) { const m = moneyOf(r); addTo(g, r.currency, Number(r.gross_minor)); addTo(c, r.currency, m.commission); addTo(nt, r.currency, m.netIncome); addTo(got, r.currency, m.net); addTo(open_, r.currency, m.remaining); }
+    h += `<div class="card"><b>${year} · ${done.length} konaklama (opsiyonlar dahil)</b><p class="tiny" style="margin:2px 0 8px">Her para birimi ayrı toplanır.</p>
+      <div class="row"><span>Brüt</span><b>${totalsText(g)}</b></div><div class="row"><span>Komisyon</span><b>${totalsText(c)}</b></div>
+      <div class="row"><span>Net</span><b style="color:var(--ok)">${totalsText(nt)}</b></div><div class="row"><span>Tahsil edilen</span><b>${totalsText(got)}</b></div>
+      <div class="row"><span>Kalan</span><b style="color:var(--terra)">${totalsText(open_)}</b></div></div>`;
+    for (const v of d.villas) {
+      const vr = done.filter((r) => r.villa_id === v.id);
+      const nights = vr.reduce((s, r) => s + nightsOf(r.check_in, r.check_out), 0);
+      const vg = {}; vr.forEach((r) => addTo(vg, r.currency, Number(r.gross_minor)));
+      h += `<div class="card"><div class="row"><b style="text-align:left">${esc(v.name)}</b><span class="muted">${vr.length} konaklama · ${nights} gece</span></div><div class="row"><span>Brüt</span><b>${totalsText(vg)}</b></div></div>`;
+    }
+    const canc = yr.filter((r) => r.status === 'cancelled');
+    if (canc.length) {
+      const rf = {}, dd = {}; let pend = 0;
+      canc.forEach((r) => { addTo(rf, r.currency, moneyOf(r).refunded); addTo(dd, r.currency, Number(r.deduction_minor || 0)); if (r.refund_status === 'pending') pend++; });
+      h += `<div class="card"><b>İptaller · ${canc.length}</b><div class="row"><span>İade edilen</span><b>${totalsText(rf)}</b></div><div class="row"><span>Kesinti</span><b>${totalsText(dd)}</b></div><div class="row"><span>İadesi bekleyen</span><b>${pend}</b></div></div>`;
+    }
+  }
+
+  $app.innerHTML = h;
+  // olaylar
+  $app.querySelectorAll('[data-tab]').forEach((b) => (b.onclick = () => { tab = b.dataset.tab; renderAdmin(d); }));
+  $app.querySelectorAll('[data-f]').forEach((b) => (b.onclick = () => { filter = b.dataset.f; renderAdmin(d); }));
+  $app.querySelectorAll('[data-y]').forEach((b) => (b.onclick = () => { year = Number(b.dataset.y); renderAdmin(d); }));
+  $app.querySelectorAll('[data-open]').forEach((b) => (b.onclick = () => { const id = b.dataset.open; open.has(id) ? open.delete(id) : open.add(id); renderAdmin(d); }));
+  $app.querySelectorAll('.bar[data-id]').forEach((b) => (b.onclick = () => { open.add(b.dataset.id); const el = document.querySelector(`[data-open="${CSS.escape(b.dataset.id)}"]`); el && el.scrollIntoView({ behavior: 'smooth', block: 'start' }); renderAdmin(d); setTimeout(() => { const e2 = document.querySelector(`[data-open="${CSS.escape(b.dataset.id)}"]`); e2 && e2.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 30); }));
+  const q = document.getElementById('q');
+  if (q) q.oninput = () => { query = q.value; const pos = q.selectionStart; renderAdmin(d); const q2 = document.getElementById('q'); q2.focus(); q2.setSelectionRange(pos, pos); };
+  const pv = document.getElementById('prev'), nx = document.getElementById('next');
+  if (pv) pv.onclick = () => { view = addMonths(view.y, view.m, -1); renderAdmin(d); };
+  if (nx) nx.onclick = () => { view = addMonths(view.y, view.m, 1); renderAdmin(d); };
+  document.getElementById('reload').onclick = () => start();
+  const sc = document.getElementById('tlscroll');
+  if (sc && view.y === Number(today.slice(0, 4)) && view.m === Number(today.slice(5, 7))) sc.scrollLeft = Math.max(0, (Number(today.slice(8)) - 3) * 38);
+}
+
+function card(r, vName, today) {
+  const m = moneyOf(r);
+  const n = nightsOf(r.check_in, r.check_out);
+  const warn = [];
+  if ((r.status === 'confirmed' || r.status === 'completed')) {
+    if (r.check_in <= today && !r.registry_done) warn.push('Defter yok');
+    if (r.check_out <= today && !r.invoice_date) warn.push('Fatura yok');
+    if (m.remaining > 0 && r.check_in <= addDays(today, 14)) warn.push('Ödeme eksik');
+  }
+  if (r.status === 'confirmed' && r.check_out <= today) warn.push('Arşive alınmayı bekliyor');
+  if (r.status === 'option' && r.option_until) warn.push((r.option_until <= today ? 'Opsiyon süresi doldu ' : 'Opsiyon bitişi ') + fmt(r.option_until, false));
+  let h = `<div class="card rc" data-open="${esc(r.id)}"><div class="t"><b>${esc(r.guest_name || 'Misafir')}</b><b>${money(r.gross_minor, r.currency)}</b></div>
+    <div class="small muted">${esc(vName(r.villa_id))} · ${fmtR(r.check_in, r.check_out)} · ${n} gece${r.agency_name ? ' · ' + esc(r.agency_name) : ''}</div>
+    <span class="badge b-${r.status}">${STATUS[r.status]}</span>${warn.map((w) => `<span class="badge b-warn">${esc(w)}</span>`).join('')}`;
+  if (open.has(r.id)) {
+    h += `<div class="detail">
+      <h4>Misafir</h4>
+      ${r.guest_phone ? `<div class="row"><span>Telefon</span><b><a href="tel:${esc(r.guest_phone)}">${esc(r.guest_phone)}</a></b></div>` : ''}
+      ${r.guest_email ? `<div class="row"><span>E-posta</span><b>${esc(r.guest_email)}</b></div>` : ''}
+      ${r.guests_count ? `<div class="row"><span>Kişi</span><b>${r.guests_count}</b></div>` : ''}
+      <div class="row"><span>Giriş / çıkış</span><b>${fmt(r.check_in)} 16:00 → ${fmt(r.check_out)} 10:00</b></div>
+      <h4>Ücret</h4>
+      <div class="row"><span>Brüt</span><b>${money(r.gross_minor, r.currency)}</b></div>
+      ${r.agency_id ? `<div class="row"><span>Komisyon${r.commission_pct != null ? ' (%' + String(r.commission_pct).replace('.', ',') + ')' : ''}</span><b>${money(m.commission, r.currency)}</b></div><div class="row"><span>Net</span><b>${money(m.netIncome, r.currency)}</b></div>` : '<div class="row"><span>Kanal</span><b>Direkt</b></div>'}
+      <div class="row"><span>Alınan</span><b>${money(m.net, r.currency)}</b></div>
+      ${m.remaining ? `<div class="row"><span>Kalan</span><b style="color:var(--terra)">${money(m.remaining, r.currency)}</b></div>` : ''}
+      ${(r.payments || []).length ? `<h4>Ödemeler</h4>` + r.payments.map((p) => `<div class="row"><span>${fmt(p.paid_on)} · ${KIND[p.kind]} · ${METHOD[p.method] || ''}${p.currency !== r.currency && p.rate ? ' · kur ' + String(p.rate).replace('.', ',') : ''}</span><b>${p.kind === 'refund' ? '−' : ''}${money(p.amount_minor, p.currency)}</b></div>`).join('') : ''}
+      <h4>Resmi</h4>
+      <div class="row"><span>Fatura tarihi</span><b>${r.invoice_date ? fmt(r.invoice_date) : 'Kesilmedi'}</b></div>
+      <div class="row"><span>Konaklama defteri</span><b>${r.registry_done ? 'İşlendi ' + (r.registry_date ? fmt(r.registry_date) : '') : 'İşlenmedi'}</b></div>
+      ${r.status === 'cancelled' ? `<h4>İptal</h4><div class="row"><span>İptal tarihi</span><b>${fmt(r.cancel_date)}</b></div>${r.cancel_reason ? `<div class="row"><span>Neden</span><b>${esc(r.cancel_reason)}</b></div>` : ''}<div class="row"><span>Kesinti</span><b>${money(r.deduction_minor || 0, r.currency)}</b></div><div class="row"><span>İade</span><b>${money(m.refunded, r.currency)} · ${REFUND[r.refund_status] || '—'}</b></div>` : ''}
+      ${r.note ? `<h4>Not</h4><p style="margin:0;white-space:pre-wrap">${esc(r.note)}</p>` : ''}
+    </div>`;
+  }
+  return h + '</div>';
+}
+
+function showMessage(title, text) {
+  $app.innerHTML = `<div class="msg"><img src="favicon.png" alt="" width="72" height="72" style="border-radius:18px"><h2>${title}</h2><p class="muted">${text}</p></div>`;
+}
+
+async function start() {
+  try {
+    const d = await load();
+    const t = localToday();
+    if (!view) view = { y: Number(t.slice(0, 4)), m: Number(t.slice(5, 7)) };
+    if (d.kind === 'admin') { document.title = 'Sasi · Kayıtlar'; renderAdmin(d); }
+    else { document.documentElement.lang = lang; document.title = L[lang].title; renderAvailability(d); }
+  } catch (e) {
+    console.error(e);
+    const m = String(e && e.message);
+    if (m === 'missing' || m === 'invalid') showMessage('Bağlantı geçersiz · Invalid link', 'Bu bağlantı iptal edilmiş ya da eksik kopyalanmış olabilir. Lütfen size bağlantıyı gönderen kişiden yenisini isteyin.<br>This link may have been revoked or copied incompletely.');
+    else showMessage('Bağlanılamadı · Could not connect', 'İnternet bağlantınızı kontrol edip sayfayı yenileyin.<br>Check your connection and reload.');
+  }
+}
+window.addEventListener('hashchange', () => location.reload());
+start();
+</script>
+</body>
+</html>

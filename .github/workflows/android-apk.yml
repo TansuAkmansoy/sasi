@@ -1,0 +1,64 @@
+# Her main gönderiminde (ya da elle "Run workflow" ile) Android APK derler
+# ve GitHub "Releases" sayfasına koyar. Expo hesabı ya da EAS gerekmez.
+name: Android APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'supabase/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Android SDK lisansları
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+
+      - name: Paketleri kur
+        run: |
+          npm install
+          npx expo install --fix
+
+      - name: Birim testleri
+        run: npm test
+
+      - name: Tür kontrolü
+        continue-on-error: true
+        run: npx tsc --noEmit
+
+      - name: Android projesini üret
+        run: npx expo prebuild --platform android --no-install --clean
+
+      - name: APK derle
+        working-directory: android
+        run: |
+          ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../sasi.apk
+
+      - name: Sürüm olarak yayınla
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Sasi 1.0.${{ github.run_number }}
+          body: |
+            Telefonda bu sayfayı aç, **sasi.apk** dosyasını indir ve kur.
+            İlk kurulumda Android "bilinmeyen kaynaklardan yükleme" izni isteyebilir.
+          files: sasi.apk

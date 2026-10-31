@@ -1,0 +1,37 @@
+{
+  "name": "sasi",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "kontrol": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/lib/*.test.ts"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "*",
+    "@react-native-async-storage/async-storage": "*",
+    "@supabase/supabase-js": "^2.45.0",
+    "expo": "*",
+    "expo-clipboard": "*",
+    "expo-constants": "*",
+    "expo-crypto": "*",
+    "expo-linking": "*",
+    "expo-notifications": "*",
+    "expo-router": "*",
+    "expo-splash-screen": "*",
+    "expo-status-bar": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-safe-area-context": "*",
+    "react-native-screens": "*",
+    "react-native-url-polyfill": "*",
+    "zustand": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "*",
+    "@types/node": "*",
+    "typescript": "^5.0.0"
+  }
+}

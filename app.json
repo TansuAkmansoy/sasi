@@ -1,0 +1,41 @@
+{
+  "expo": {
+    "name": "Sasi",
+    "slug": "sasi",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "sasi",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "backgroundColor": "#FBF7F0",
+    "android": {
+      "package": "com.sasi.villa",
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "pan",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F3E3C7",
+        "monochromeImage": "./assets/adaptive-icon-mono.png"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 180,
+          "resizeMode": "contain",
+          "backgroundColor": "#F3E3C7"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#14A7AE"
+        }
+      ]
+    ]
+  }
+}
