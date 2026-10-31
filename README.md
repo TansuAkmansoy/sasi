@@ -13,7 +13,7 @@ Kalkan/Kaş'taki villaların (Villa Poyraz, Villa Seascape, Villa Shipahoy) reze
 
 ### 1. Supabase veritabanı
 1. Supabase panelinde projeyi aç → **SQL Editor** → **New query**.
-2. [`supabase/kurulum.sql`](supabase/kurulum.sql) dosyasının tamamını yapıştır → **Run**. "Success" görmelisin.
+2. `supabase/parca1.sql`, `parca2.sql`, `parca3.sql` dosyalarını sırayla, her biri ayrı sorguda çalıştır (telefondan kopyalamada uzun dosya yarım kalabiliyor). Bilgisayardan tek seferde `kurulum.sql` de olur.
 3. **Authentication → Users → Add user → Create new user**: kendi e-postanı ve bir şifre gir, **Auto Confirm User** işaretli olsun.
 4. **Authentication → Sign In / Providers** (ya da *Settings*): **Allow new users to sign up** seçeneğini **kapat**. Böylece uygulamaya senden başka kimse hesap açamaz.
 5. **Project Settings → API Keys** (ya da üstteki **Connect** düğmesi): *Project URL* ve **anon / publishable** anahtarını kopyala. `service_role` / `secret` anahtarını asla kullanma.
