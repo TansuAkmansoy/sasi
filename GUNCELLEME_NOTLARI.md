@@ -1,6 +1,6 @@
 # Sasi — Güncelleme notları
 
-Durum: **1.1 uygulandı** (1 Kasım 2026). Yeni istekler aşağıya eklenir; "uygula" denmeden koda dokunulmaz.
+Durum: 1.1 uygulandı. **1.2 bekliyor** — "uygula" denmeden koda dokunulmaz.
 
 ## Sürüm 1.1 için istenenler (1 Kasım 2026)
 
@@ -78,3 +78,33 @@ Durum: **1.1 uygulandı** (1 Kasım 2026). Yeni istekler aşağıya eklenir; "uy
 - Takvim: Google Takvim tarzı **ay görünümü** (villa renkleri, gün seçince o günün listesi); eski villa çizelgesi de duruyor.
 - Her rezervasyonda **Google Takvim** düğmesi: etkinlik Google Takvim'e eklenir.
 - Veritabanı: `supabase/guncelleme-1.1.sql` (bir kez çalıştırılır).
+
+## Sürüm 1.2 için istenenler (1 Kasım 2026)
+
+### 1. Tarih seçicide oklar yerinde dursun
+- Takvimde ay değiştirirken ayın hafta sayısına göre (4, 5 ya da 6 satır) pencere yükselip alçalıyor; ileri/geri okları yer değiştiriyor.
+- Pencere yüksekliği sabit olacak (her ay 6 satır yer ayrılır). Oklar hep aynı yerde kalır.
+
+### 2. Hızlı ay/yıl seçimi
+- Ay adına (örn. "Şubat 2027") dokununca kaydırmalı bir seçici açılır. Ay ve yıl çevrilerek istenen tarihe hızlıca gidilir.
+- Tarih seçicide ve takvim sekmesinde geçerli olur.
+
+### 3. Yeni uygulama ikonu
+- Kullanıcının gönderdiği logo (`assets/sasi-logo.pdf`): yeşilden maviye geçişli ev simgesi ve "sasi" yazısı.
+- Uygulama ikonu, açılış ekranı ve giriş ekranı bu logoyla değişecek.
+
+### 4. Güncel döviz kurları
+- Uygulama güncel kurları takip eder.
+- Verilen bir fiyat güncel kurla diğer para birimlerine (TL, Euro, Sterlin, Dolar) çevrilerek gösterilir.
+
+### 5. Önerilen ücret ve anlaşılan ücret
+- Aylık fiyatlardan hesaplanan (önerilen) ücret ile müşteriyle anlaşılan ücret farklı olabilir.
+- Anlaşılan ücret rezervasyonda kalıcı olarak saklanır; fiyat listesi sonradan değişse de değişmez.
+- Önerilen ücret de bilgi olarak saklanır ve ikisi arasındaki fark gösterilir.
+
+### Netleşmesi gerekenler
+1. Kur kaynağı: TCMB (Merkez Bankası) günlük kurları mı, yoksa gün içi piyasa kurları mı?
+2. Kur karşılıkları nerede görünsün: ücret hesaplama ekranında, rezervasyon ekranında, ikisinde de mi?
+3. Rezervasyon yapıldığı günün kuru rezervasyona kaydedilsin mi (sonradan "o gün kaç TL ediyordu" görebilmek için)?
+4. Uygulama ikonunda yalnızca ev simgesi mi kullanılsın? Küçük boyutta "sasi" yazısı okunmaz; yazı giriş ekranında kalır.
+5. Uygulamanın renkleri logodaki yeşil-mavi geçişe göre güncellensin mi?
