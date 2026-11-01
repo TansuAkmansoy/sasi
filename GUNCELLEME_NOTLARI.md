@@ -102,7 +102,14 @@ Durum: 1.1 uygulandı. **1.2 bekliyor** — "uygula" denmeden koda dokunulmaz.
 - Anlaşılan ücret rezervasyonda kalıcı olarak saklanır; fiyat listesi sonradan değişse de değişmez.
 - Önerilen ücret de bilgi olarak saklanır ve ikisi arasındaki fark gösterilir.
 
-### Netleşmesi gerekenler
+### Verilen kararlar (1 Kasım 2026)
+- Kur kaynağı: TCMB günlük kurları.
+- Kur karşılıkları hem ücret hesaplama hem rezervasyon ekranında görünür.
+- Rezervasyon günündeki kur kayda yazılır ve görünür.
+- İkonda yalnızca ev simgesi kullanılır; "sasi" yazısı giriş ekranında kalır.
+- Uygulama renkleri logodaki yeşil-mavi geçişe göre güncellenir.
+
+### Sorulan sorular (yanıtlandı)
 1. Kur kaynağı: TCMB (Merkez Bankası) günlük kurları mı, yoksa gün içi piyasa kurları mı?
 2. Kur karşılıkları nerede görünsün: ücret hesaplama ekranında, rezervasyon ekranında, ikisinde de mi?
 3. Rezervasyon yapıldığı günün kuru rezervasyona kaydedilsin mi (sonradan "o gün kaç TL ediyordu" görebilmek için)?
