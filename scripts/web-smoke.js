@@ -33,6 +33,8 @@ const server = http.createServer((req, res) => {
       console.log('OK  ', name);
     } catch (e) {
       console.log('FAIL', name, '-', e.message.split('\n')[0]);
+      const txt = (await page.innerText('body').catch(() => '')).replace(/\s+/g, ' ').slice(0, 400);
+      console.log('     sayfa:', page.url(), '|', txt);
     }
   };
   await step('açılış ekranı', async () => {
@@ -49,7 +51,7 @@ const server = http.createServer((req, res) => {
     await page.getByText('Villa çizelgesi').waitFor({ timeout: 20000 });
   });
   await step('rezervasyon detayı', async () => {
-    await page.getByText('Kayıtlar', { exact: true }).last().click();
+    await page.goto(url + 'rezervasyonlar', { waitUntil: 'networkidle' });
     await page.getByText('Mehmet Yılmaz').first().click();
     await page.getByText('Değişiklik geçmişi').waitFor({ timeout: 10000 });
   });
