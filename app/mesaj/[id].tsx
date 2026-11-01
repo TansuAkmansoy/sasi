@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { paylas } from '../../src/lib/paylas';
 import { Linking, Share, TextInput } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -39,7 +40,7 @@ export default function MesajEkrani() {
     try {
       await Linking.openURL(url);
     } catch {
-      await Share.share({ message: text });
+      await paylas(text);
     }
   }
 
@@ -79,7 +80,7 @@ export default function MesajEkrani() {
           setInfo('Metin kopyalandı.');
         }}
       />
-      <Button title="Başka uygulamayla paylaş" icon="share-outline" kind="ghost" onPress={() => Share.share({ message: text })} />
+      <Button title="Başka uygulamayla paylaş" icon="share-outline" kind="ghost" onPress={() => paylas(text)} />
       {text !== generated ? <Button title="Değişiklikleri geri al" kind="ghost" small onPress={() => setText(generated)} /> : null}
     </Screen>
   );

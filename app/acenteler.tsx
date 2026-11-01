@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { onay } from '../src/lib/onay';
 import { Alert, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useStore } from '../src/store';
@@ -73,7 +74,7 @@ export default function AcentelerEkrani() {
                 color={c.danger}
                 label="Sil"
                 onPress={() =>
-                  Alert.alert('Acenteyi sil', count ? `${count} rezervasyonda bu acente "Direkt" olarak görünecek.` : 'Silinsin mi?', [
+                  onay('Acenteyi sil', count ? `${count} rezervasyonda bu acente "Direkt" olarak görünecek.` : 'Silinsin mi?', [
                     { text: 'Vazgeç', style: 'cancel' },
                     { text: 'Sil', style: 'destructive', onPress: () => deleteAgency(a.id).catch((e) => setErr((e as Error).message)) },
                   ])

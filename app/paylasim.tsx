@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { paylas } from '../src/lib/paylas';
+import { onay } from '../src/lib/onay';
 import { Alert, Linking, Share, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
@@ -29,7 +31,7 @@ export default function PaylasimEkrani() {
       const id = await createLink(l, kind);
       setLabel('');
       const url = useStore.getState().linkUrl(id);
-      if (url) await Share.share({ message: kind === 'admin' ? url : `Villa müsaitlik takvimi / Availability: ${url}` });
+      if (url) await paylas(kind === 'admin' ? url : `Villa müsaitlik takvimi / Availability: ${url}`);
     } catch (e) {
       setMsg({ kind: 'error', text: (e as Error).message });
     } finally {
@@ -40,7 +42,7 @@ export default function PaylasimEkrani() {
   function share(l: ShareLink) {
     const url = linkUrl(l.id);
     if (!url) return;
-    Share.share({ message: l.kind === 'admin' ? url : `Villa müsaitlik takvimi / Availability: ${url}` });
+    paylas(l.kind === 'admin' ? url : `Villa müsaitlik takvimi / Availability: ${url}`);
   }
 
   async function copy(l: ShareLink) {
@@ -51,7 +53,7 @@ export default function PaylasimEkrani() {
   }
 
   function revoke(l: ShareLink) {
-    Alert.alert('Bağlantıyı iptal et', `"${l.label}" bağlantısı hemen çalışmaz hale gelir. Gerekirse yenisini oluşturursun.`, [
+    onay('Bağlantıyı iptal et', `"${l.label}" bağlantısı hemen çalışmaz hale gelir. Gerekirse yenisini oluşturursun.`, [
       { text: 'Vazgeç', style: 'cancel' },
       { text: 'İptal et', style: 'destructive', onPress: () => revokeLink(l.id).catch((e) => setMsg({ kind: 'error', text: (e as Error).message })) },
     ]);
@@ -79,6 +81,26 @@ export default function PaylasimEkrani() {
         <Field label="Etiket" placeholder={kind === 'admin' ? 'Örn. Ortak yönetici' : 'Örn. Müşteriler, Kalkan Holidays'} value={label} onChangeText={setLabel} />
         <Button title="Oluştur ve paylaş" icon="share-social-outline" loading={busy} onPress={create} />
       </Card>
+
+      {mode !== 'demo' ? (
+        <Card>
+          <Text style={{ color: c.text, fontSize: 16, fontWeight: '700' }}>iPhone için uygulama</Text>
+          <Muted style={{ marginTop: 4, marginBottom: 10 }}>
+            Ortak yönetici iPhone'dan kayıt ekleyip düzenleyebilir. Bu bağlantıyı gönder; Safari'de açıp Paylaş → Ana Ekrana Ekle demesi yeterli. Giriş için Supabase'de ona ayrı bir kullanıcı aç.
+          </Muted>
+          <Button
+            title="Uygulama bağlantısını gönder"
+            icon="phone-portrait-outline"
+            kind="secondary"
+            onPress={() => {
+              const c0 = useStore.getState().config;
+              if (!c0) return;
+              const base = c0.shareBase.endsWith('/') ? c0.shareBase : c0.shareBase.replace(/[^/]*$/, '');
+              paylas(`Sasi uygulaması (iPhone: Safari'de aç → Paylaş → Ana Ekrana Ekle):\n${base}app/#u=${encodeURIComponent(c0.url)}&k=${encodeURIComponent(c0.key)}`);
+            }}
+          />
+        </Card>
+      ) : null}
 
       <SectionTitle>Etkin bağlantılar ({links.length})</SectionTitle>
       {links.length === 0 ? <Muted>Henüz bağlantı yok.</Muted> : null}

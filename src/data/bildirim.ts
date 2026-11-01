@@ -42,6 +42,7 @@ function at9(isoDate: string): Date {
 }
 
 export async function syncOptionReminders(reservations: Reservation[], villas: Villa[]): Promise<void> {
+  if (Platform.OS === 'web') return; // web sürümünde bildirim yok
   try {
     if (!(await setupNotifications())) return;
     await Notifications.cancelAllScheduledNotificationsAsync();
@@ -74,4 +75,13 @@ export async function syncOptionReminders(reservations: Reservation[], villas: V
   } catch {
     // Bildirim kurulamadıysa uygulama yine de çalışır; hold'lar "Bugün" ekranında görünür.
   }
+}
+
+/** Bildirime dokununca rezervasyon id'siyle çağrılır; aboneliği kaldıran fonksiyonu döner. */
+export function onReminderTap(cb: (reservationId: string) => void): () => void {
+  const sub = Notifications.addNotificationResponseReceivedListener((resp) => {
+    const id = resp.notification.request.content.data?.reservationId;
+    if (typeof id === 'string') cb(id);
+  });
+  return () => sub.remove();
 }

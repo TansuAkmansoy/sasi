@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sasi",
     "slug": "sasi",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "scheme": "sasi",
     "userInterfaceStyle": "automatic",
@@ -10,7 +10,7 @@
     "backgroundColor": "#F5FAF9",
     "android": {
       "package": "com.sasi.villa",
-      "versionCode": 3,
+      "versionCode": 4,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -35,7 +35,25 @@
           "icon": "./assets/notification-icon.png",
           "color": "#1A9A86"
         }
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Sasi, rezervasyonları Google Takvim'ine yazmak için takvim erişimi ister."
+        }
       ]
-    ]
+    ],
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "Sasi",
+      "shortName": "Sasi",
+      "themeColor": "#138A7A",
+      "backgroundColor": "#F5FAF9"
+    },
+    "experiments": {
+      "baseUrl": "/sasi/app"
+    }
   }
 }

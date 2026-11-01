@@ -7,6 +7,9 @@ import { supabaseBackend, signIn, hasSession } from './data/supabase';
 import { demoBackend } from './data/demo';
 import { syncOptionReminders } from './data/bildirim';
 import { mergeSettings } from './lib/sablon';
+import { setFxRemote } from './data/kur';
+import { autoSync } from './data/gtakvimSenk';
+import type { Rates } from './lib/kur';
 
 export const DEFAULT_SHARE_BASE = 'https://tansuakmansoy.github.io/sasi/';
 
@@ -155,8 +158,17 @@ export const useStore = create<State>((set, get) => ({
     try {
       const data = await b.loadAll();
       set({ data, offline: false, error: null });
+      if (b.kind === 'supabase') {
+        setFxRemote({
+          save: (k, r) => {
+            b.saveSetting(k, r).catch(() => {});
+          },
+          load: async (k) => ((await b.getSetting(k)) as Rates | null) ?? null,
+        });
+      }
       AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data)).catch(() => {});
       syncOptionReminders(data.reservations, data.villas);
+      autoSync(data.reservations, data.villas, data.settings.fees);
     } catch (e) {
       const msg = (e as Error).message;
       if (!get().data) {

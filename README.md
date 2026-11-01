@@ -24,9 +24,11 @@ Daha önce kurulum yaptıysan SQL Editor'de `supabase/guncelleme-1.1.sql` dosyas
 ### 1c. Sürüm 1.2 güncellemesi
 SQL Editor'de `supabase/guncelleme-1.2.sql` dosyasını bir kez çalıştır.
 
-### 2. Paylaşım sayfası (GitHub Pages)
-Repo → **Settings → Pages** → *Source*: **Deploy from a branch** → Branch: **main**, klasör: **/docs** → **Save**.
-Birkaç dakika sonra sayfa `https://tansuakmansoy.github.io/sasi/` adresinde açılır.
+### 1d. Sürüm 1.3 güncellemesi
+SQL Editor'de `supabase/guncelleme-1.3.sql` dosyasını bir kez çalıştır.
+
+### 2. Paylaşım sayfası ve web sürümü (GitHub Pages)
+Repo → **Settings → Pages** → *Source*: **GitHub Actions**. Her güncellemede `web.yml` iş akışı paylaşım sayfasını (`https://tansuakmansoy.github.io/sasi/`) ve uygulamanın web sürümünü (`https://tansuakmansoy.github.io/sasi/app/`) yayınlar.
 
 ### 3. Uygulama
 1. Repo → **Actions → Android APK**: her güncellemede APK kendiliğinden derlenir. İlk derleme yaklaşık 15 dakika sürer.

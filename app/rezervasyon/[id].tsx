@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { onay } from '../../src/lib/onay';
 import { Alert, BackHandler, Linking, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,6 +15,7 @@ import {
   ChipRow,
   Divider,
   Field,
+  IconButton,
   Muted,
   PickerField,
   Progress,
@@ -163,7 +165,7 @@ export default function RezervasyonEkrani() {
 
   function leave() {
     if (!dirty) return router.back();
-    Alert.alert('Kaydedilmemiş değişiklikler', 'Değişiklikler kaydedilmedi. Çıkmak istiyor musun?', [
+    onay('Kaydedilmemiş değişiklikler', 'Değişiklikler kaydedilmedi. Çıkmak istiyor musun?', [
       { text: 'Düzenlemeye devam', style: 'cancel' },
       { text: 'Kaydetmeden çık', style: 'destructive', onPress: () => router.back() },
     ]);
@@ -290,7 +292,7 @@ export default function RezervasyonEkrani() {
     save({ status: 'confirmed', option_until: null, hold_until: null }, 'stay');
   }
   function releaseOption() {
-    Alert.alert('Hold\'u bırak', 'Tarihler boşalır ve başkasına satılabilir. Kayıt "Hold bırakıldı" olarak saklanır.', [
+    onay('Hold\'u bırak', 'Tarihler boşalır ve başkasına satılabilir. Kayıt "Hold bırakıldı" olarak saklanır.', [
       { text: 'Vazgeç', style: 'cancel' },
       { text: 'Bırak', style: 'destructive', onPress: () => save({ status: 'option_released' }, 'stay') },
     ]);
@@ -299,7 +301,7 @@ export default function RezervasyonEkrani() {
     const miss = missingOf({ ...resLike, status: 'completed' }, t);
     const go = () => save({ status: 'completed' }, 'stay');
     if (!miss.length) return go();
-    Alert.alert('Eksik bilgi var', `${miss.map((x) => '• ' + MISSING_LABEL[x]).join('\n')}\n\nYine de arşive alınsın mı? Sonra da düzenleyebilirsin.`, [
+    onay('Eksik bilgi var', `${miss.map((x) => '• ' + MISSING_LABEL[x]).join('\n')}\n\nYine de arşive alınsın mı? Sonra da düzenleyebilirsin.`, [
       { text: 'Düzenle', style: 'cancel' },
       { text: 'Yine de tamamla', onPress: go },
     ]);
@@ -329,6 +331,11 @@ export default function RezervasyonEkrani() {
       title={isNew ? 'Yeni rezervasyon' : form.guest_name || 'Rezervasyon'}
       subtitle={!isNew ? `${villaName(form.villa_id)} · ${STATUS_LABEL[st]}` : undefined}
       onBack={leave}
+      right={
+        !isNew && existing ? (
+          <IconButton icon="calendar-outline" label="Google Takvim'e ekle" onPress={() => Linking.openURL(googleCalendarUrl(existing, villaName(existing.villa_id), data!.settings.fees))} />
+        ) : undefined
+      }
       footer={
         <Button
           title={cancelling ? 'İptali kaydet' : isNew ? 'Rezervasyonu kaydet' : 'Değişiklikleri kaydet'}
@@ -807,7 +814,10 @@ function HistoryItem(props: { h: HistoryEntry; villaName: (id: string) => string
     <View style={{ flexDirection: 'row', marginBottom: 10 }}>
       <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: c.primary, marginTop: 6, marginRight: 10 }} />
       <View style={{ flex: 1 }}>
-        <Text style={{ color: c.text2, fontSize: 12 }}>{when}</Text>
+        <Text style={{ color: c.text2, fontSize: 12 }}>
+          {when}
+          {h.actor ? ` · ${h.actor.split('@')[0]}` : ''}
+        </Text>
         {h.action === 'created' ? (
           <Text style={{ color: c.text, fontSize: 14 }}>Kayıt oluşturuldu</Text>
         ) : (

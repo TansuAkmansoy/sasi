@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, View, useColorScheme } from 'react-native';
+import { ActivityIndicator, Platform, View, useColorScheme } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import * as Notifications from 'expo-notifications';
+import { onReminderTap } from '../src/data/bildirim';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useStore } from '../src/store';
 import { useColors } from '../src/theme';
@@ -27,12 +27,8 @@ export default function RootLayout() {
 
   // Hold bildirimine dokununca ilgili rezervasyonu aç
   useEffect(() => {
-    if (phase !== 'ready') return;
-    const sub = Notifications.addNotificationResponseReceivedListener((resp) => {
-      const id = resp.notification.request.content.data?.reservationId;
-      if (typeof id === 'string') router.push({ pathname: '/rezervasyon/[id]', params: { id } });
-    });
-    return () => sub.remove();
+    if (phase !== 'ready' || Platform.OS === 'web') return;
+    return onReminderTap((id) => router.push({ pathname: '/rezervasyon/[id]', params: { id } }));
   }, [phase]);
 
   return (
@@ -55,6 +51,7 @@ export default function RootLayout() {
           <Stack.Screen name="mesaj/[id]" />
           <Stack.Screen name="hesapla" />
           <Stack.Screen name="metinler" />
+          <Stack.Screen name="takvim-aktarim" />
         </Stack>
       )}
     </SafeAreaProvider>

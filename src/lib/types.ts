@@ -98,6 +98,8 @@ export interface HistoryEntry {
   reservation_id: string;
   changed_at: string;
   action: 'created' | 'updated';
+  /** değişikliği yapan hesabın e-postası (1.3'ten itibaren) */
+  actor?: string | null;
   changes: Record<string, { old: unknown; new: unknown }> | null;
 }
 

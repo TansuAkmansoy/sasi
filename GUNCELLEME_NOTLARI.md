@@ -1,6 +1,6 @@
 # Sasi — Güncelleme notları
 
-Durum: 1.2 uygulandı. **1.3 bekliyor**: "uygula" denmeden koda dokunulmaz.
+Durum: **1.3 uygulandı** (1 Kasım 2026). Yeni istekler aşağıya eklenir; "uygula" denmeden koda dokunulmaz.
 
 ## Sürüm 1.1 için istenenler (1 Kasım 2026)
 
@@ -141,3 +141,22 @@ Durum: 1.2 uygulandı. **1.3 bekliyor**: "uygula" denmeden koda dokunulmaz.
 2. Hold'lar da aktarılsın mı (başlıkta "Hold" yazarak), yoksa yalnızca onaylı rezervasyonlar mı?
 3. Aktarım her kayıt ve değişiklikte kendiliğinden mi olsun, yoksa yalnızca düğmeye basınca mı?
 4. Etkinlik biçimi: giriş 16:00'dan çıkış 10:00'a kadar tek uzun etkinlik mi, yoksa giriş ve çıkış günleri için ayrı iki kısa etkinlik mi?
+
+### 3. iPhone'dan kayıt ekleme/düzenleme (web sürümü)
+- Aynı uygulamanın web sürümü yayınlanır; iPhone'da Safari → Ana Ekrana Ekle ile uygulama gibi açılır.
+- Ortak yönetici Supabase'de kendi kullanıcısıyla giriş yapar.
+- Değişiklik geçmişine kimin değiştirdiği yazılır.
+
+### Verilen kararlar (soruların yanıtı gelmeden önerilen varsayılanlarla uygulandı)
+- Hedef takvim Ayarlar'dan seçilir; ayrı bir "Sasi" takvimi önerilir.
+- Hold'lar da aktarılır, başlıkta "HOLD" yazar.
+- Aktarım her kayıt ve değişiklikten sonra kendiliğinden yapılır; ayrıca "Hepsini şimdi aktar" düğmesi var.
+- Etkinlik biçimi: giriş 16:00 → çıkış 10:00 tek etkinlik.
+
+## 1.3'te yapılanlar
+- **Google Takvim aktarımı** (Ayarlar → Takvim, ya da Takvim sekmesindeki Google simgesi): telefonun takvimindeki bir Google takvimine Hold/Onaylı/Tamamlandı rezervasyonları yazar; değişeni günceller, iptal edileni siler. Etkinlik eşlemesi telefonda tutulur.
+- Rezervasyon ekranının sağ üstünde takvim simgesi: tek kaydı Google Takvim'e ekleme (eski düğme de duruyor).
+- **Web sürümü**: `https://tansuakmansoy.github.io/sasi/app/`. Onay pencereleri tarayıcıya uyarlandı, bildirim ve takvim aktarımı web'de kapalı. TCMB kurları web'de Supabase üzerinden okunur (Android uygulama indirdiği kurları yazar).
+- Ayarlar → Paylaşım bağlantıları → "Uygulama bağlantısını gönder": Supabase bilgileri hazır gelen kurulum bağlantısı.
+- Değişiklik geçmişinde kim değiştirdi (e-posta). Veritabanı: `supabase/guncelleme-1.3.sql`.
+- GitHub: yeni iş akışı `web.yml` (Pages kaynağı "GitHub Actions" olmalı).

@@ -18,7 +18,8 @@ export interface Backend {
   createLink(label: string, kind: LinkKind, tokenHash: string): Promise<string>;
   revokeLink(id: string): Promise<void>;
   history(reservationId: string): Promise<HistoryEntry[]>;
-  saveSetting(key: 'fees' | 'texts', value: unknown): Promise<void>;
+  saveSetting(key: string, value: unknown): Promise<void>;
+  getSetting(key: string): Promise<unknown | null>;
   signOut(): Promise<void>;
 }
 

@@ -56,6 +56,7 @@ export default function TakvimEkrani() {
       subtitle={mode === 'demo' ? 'Örnek veriler · gerçek kayıt değil' : data ? `Son güncelleme ${new Date(data.fetchedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : undefined}
       right={
         <>
+          <IconButton icon="logo-google" label="Google Takvim aktarımı" onPress={() => router.push('/takvim-aktarim')} />
           <IconButton icon="calculator-outline" label="Ücret hesapla" onPress={() => router.push('/hesapla')} />
           <IconButton icon="search" label="Müsaitlik sorgula" onPress={() => router.push('/musaitlik')} />
           <IconButton icon="add-circle" color={c.primary} label="Yeni rezervasyon" onPress={() => router.push({ pathname: '/rezervasyon/[id]', params: { id: 'yeni' } })} />

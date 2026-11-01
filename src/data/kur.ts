@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { parseTcmb, Rates, tcmbUrl } from '../lib/kur';
 import { addDays, today } from '../lib/tarih';
 
@@ -9,6 +10,21 @@ import { addDays, today } from '../lib/tarih';
 const TODAY_KEY = 'sasi.fx.today';
 const dayKey = (d: string) => `sasi.fx.${d}`;
 const memory = new Map<string, Rates>();
+
+/**
+ * Tarayıcı (iPhone web sürümü) TCMB'den doğrudan okuyamaz (CORS). Android uygulama
+ * indirdiği bültenleri Supabase'e (app_settings, "fx:..." anahtarları) yazar;
+ * web sürümü oradan okur.
+ */
+export interface FxRemote {
+  save(key: string, rates: Rates): void;
+  load(key: string): Promise<Rates | null>;
+}
+let remote: FxRemote | null = null;
+export function setFxRemote(r: FxRemote | null) {
+  remote = r;
+}
+const isWeb = Platform.OS === 'web';
 const pending = new Map<string, Promise<Rates | null>>();
 
 async function fetchXml(url: string): Promise<Rates | null> {
@@ -26,12 +42,14 @@ async function fetchXml(url: string): Promise<Rates | null> {
 }
 
 async function loadToday(): Promise<Rates | null> {
+  if (isWeb) return (await remote?.load('fx:today').catch(() => null)) ?? null;
   const raw = await AsyncStorage.getItem(TODAY_KEY).catch(() => null);
   const cached = raw ? (JSON.parse(raw) as { at: number; rates: Rates }) : null;
   if (cached && Date.now() - cached.at < 3 * 3600_000) return cached.rates;
   const fresh = await fetchXml(tcmbUrl());
   if (fresh) {
     AsyncStorage.setItem(TODAY_KEY, JSON.stringify({ at: Date.now(), rates: fresh })).catch(() => {});
+    remote?.save('fx:today', fresh);
     return fresh;
   }
   return cached?.rates ?? null; // çevrimdışı: son bilinen kur
@@ -39,6 +57,7 @@ async function loadToday(): Promise<Rates | null> {
 
 async function loadDay(date: string): Promise<Rates | null> {
   if (date >= today()) return loadToday();
+  if (isWeb) return (await remote?.load(`fx:${date}`).catch(() => null)) ?? (await loadToday());
   const raw = await AsyncStorage.getItem(dayKey(date)).catch(() => null);
   if (raw) return JSON.parse(raw) as Rates;
   // TCMB o gün bülten yayımlamadıysa (hafta sonu, tatil) önceki günlere bak
@@ -47,6 +66,7 @@ async function loadDay(date: string): Promise<Rates | null> {
     const r = await fetchXml(tcmbUrl(d));
     if (r) {
       AsyncStorage.setItem(dayKey(date), JSON.stringify(r)).catch(() => {});
+      remote?.save(`fx:${date}`, r);
       return r;
     }
   }

@@ -14,8 +14,14 @@ export function Kurulum() {
   const login = useStore((s) => s.login);
   const startDemo = useStore((s) => s.startDemo);
   const resetConnection = useStore((s) => s.resetConnection);
-  const [url, setUrl] = useState(config?.url || 'https://olfqigbnsxsrkzlejkzm.supabase.co');
-  const [key, setKey] = useState(config?.key ?? '');
+  // Web sürümü: Android uygulamadan gönderilen bağlantı #u=...&k=... bilgileri taşır
+  const fromLink = (() => {
+    if (Platform.OS !== 'web' || typeof window === 'undefined') return null;
+    const p = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return p.get('u') && p.get('k') ? { u: p.get('u')!, k: p.get('k')! } : null;
+  })();
+  const [url, setUrl] = useState(fromLink?.u || config?.url || 'https://olfqigbnsxsrkzlejkzm.supabase.co');
+  const [key, setKey] = useState(fromLink?.k || config?.key || '');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');
   const [busy, setBusy] = useState(false);
@@ -43,7 +49,12 @@ export function Kurulum() {
 
         {err ? <Banner kind="error" text={err} /> : null}
 
-        {phase === 'setup' ? (
+        {phase === 'setup' && fromLink ? (
+          <>
+            <Banner kind="info" icon="checkmark-circle" text="Bağlantı bilgileri hazır. Devam'a dokun, sonra e-posta ve şifrenle giriş yap." />
+            <Button title="Devam" loading={busy} onPress={() => run(() => configure(url, key))} />
+          </>
+        ) : phase === 'setup' ? (
           <>
             <Text style={{ color: c.text, fontSize: 18, fontWeight: '700', marginBottom: space.s }}>Bağlantı</Text>
             <Muted style={{ marginBottom: space.l }}>

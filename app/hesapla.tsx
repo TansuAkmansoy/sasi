@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { paylas } from '../src/lib/paylas';
 import { Share, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useStore } from '../src/store';
@@ -224,7 +225,7 @@ export default function HesaplaEkrani() {
                 })
               }
             />
-            <Button title="Teklifi paylaş" icon="share-outline" kind="secondary" onPress={() => Share.share({ message: quote() })} />
+            <Button title="Teklifi paylaş" icon="share-outline" kind="secondary" onPress={() => paylas(quote())} />
           </View>
           {agencyName ? <Muted style={{ marginTop: 8, textAlign: 'center' }}>Komisyon teklif metnine yazılmaz.</Muted> : null}
         </>

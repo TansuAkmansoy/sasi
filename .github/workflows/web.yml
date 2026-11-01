@@ -1,0 +1,58 @@
+# Web sürümünü (iPhone için) ve paylaşım sayfasını GitHub Pages'e yayınlar.
+#   https://tansuakmansoy.github.io/sasi/      → paylaşım sayfası (docs/)
+#   https://tansuakmansoy.github.io/sasi/app/  → Sasi uygulamasının web sürümü
+# Gerekli ayar (bir kez): Settings → Pages → Source: "GitHub Actions"
+name: Web
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Paketleri kur
+        run: |
+          npm install
+          npx expo install --fix
+
+      - name: Web derlemesi
+        run: |
+          npx expo export --platform web --output-dir dist
+          node scripts/web-pwa.js dist
+
+      - name: Siteyi birleştir
+        run: |
+          mkdir -p site/app
+          cp -r docs/. site/
+          cp -r dist/. site/app/
+          # Uygulamanın iç sayfaları yenilenince açılsın
+          cp site/app/index.html site/404.html
+          touch site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deploy
+        uses: actions/deploy-pages@v4

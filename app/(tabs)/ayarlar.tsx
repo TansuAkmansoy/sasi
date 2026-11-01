@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { onay } from '../../src/lib/onay';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,11 +40,14 @@ export default function AyarlarEkrani() {
       <Item icon="calculator-outline" title="Ücret hesapla" text="Teklif ve ödeme planı" onPress={() => router.push('/hesapla')} />
       <Item icon="briefcase-outline" title="Acenteler" text={`${data?.agencies.length ?? 0} acente · varsayılan komisyon oranları`} onPress={() => router.push('/acenteler')} />
 
+      <SectionTitle>Takvim</SectionTitle>
+      <Item icon="logo-google" title="Google Takvim aktarımı" text="Rezervasyonları Google Takvim'e otomatik işle" onPress={() => router.push('/takvim-aktarim')} />
+
       <SectionTitle>Paylaşım</SectionTitle>
       <Item
         icon="share-social-outline"
         title="Paylaşım bağlantıları"
-        text="Müşterilere müsaitlik, ortak yöneticiye salt okunur kayıt bağlantısı"
+        text="Müşterilere müsaitlik bağlantısı, ortak yöneticiye iPhone uygulaması"
         onPress={() => router.push('/paylasim')}
       />
 
@@ -61,7 +65,7 @@ export default function AyarlarEkrani() {
               small
               style={{ flex: 1 }}
               onPress={() =>
-                Alert.alert('Çıkış yap', 'Tekrar girmek için e-posta ve şifren gerekecek.', [
+                onay('Çıkış yap', 'Tekrar girmek için e-posta ve şifren gerekecek.', [
                   { text: 'Vazgeç', style: 'cancel' },
                   { text: 'Çıkış yap', style: 'destructive', onPress: signOut },
                 ])
@@ -85,7 +89,7 @@ export default function AyarlarEkrani() {
               small
               style={{ marginTop: 12 }}
               onPress={() =>
-                Alert.alert('Bağlantıyı sıfırla', 'Supabase adresi ve anahtarı bu telefondan silinir. Kayıtların sunucuda kalır.', [
+                onay('Bağlantıyı sıfırla', 'Supabase adresi ve anahtarı bu telefondan silinir. Kayıtların sunucuda kalır.', [
                   { text: 'Vazgeç', style: 'cancel' },
                   { text: 'Sıfırla', style: 'destructive', onPress: resetConnection },
                 ])

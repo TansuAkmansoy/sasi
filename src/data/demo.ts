@@ -145,9 +145,13 @@ export function demoBackend(): Backend {
       return history.get(reservationId) ?? [];
     },
     async saveSetting(key, value) {
+      if (key !== 'fees' && key !== 'texts') return;
       const s = await read();
       s.settings = mergeSettings({ ...s.settings, [key]: value } as any);
       await write(s);
+    },
+    async getSetting() {
+      return null;
     },
     async signOut() {
       await AsyncStorage.removeItem(KEY);

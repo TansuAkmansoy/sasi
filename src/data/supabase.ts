@@ -165,6 +165,11 @@ export function supabaseBackend(url: string, key: string): Backend {
         throw friendly(error);
       }
     },
+    async getSetting(key) {
+      const { data, error } = await c.from('app_settings').select('value').eq('key', key).maybeSingle();
+      if (error) return null;
+      return (data as { value: unknown } | null)?.value ?? null;
+    },
     async signOut() {
       await c.auth.signOut();
     },
