@@ -22,7 +22,7 @@ export default function TakvimEkrani() {
   const mode = useStore((s) => s.config?.mode);
   const t = today();
   const [view, setView] = useState(ym(t));
-  const [mode, setMode] = useState<'ay' | 'cizelge'>('ay');
+  const [gorunum, setGorunum] = useState<'ay' | 'cizelge'>('ay');
   const [selDay, setSelDay] = useState<string | null>(t);
 
   const villas = (data?.villas ?? []).filter((v) => v.active);
@@ -84,15 +84,15 @@ export default function TakvimEkrani() {
       </View>
 
       <Segmented
-        value={mode}
-        onChange={setMode}
+        value={gorunum}
+        onChange={setGorunum}
         options={[
           { value: 'ay', label: 'Ay' },
           { value: 'cizelge', label: 'Villa çizelgesi' },
         ]}
       />
 
-      {villas.length && mode === 'ay' ? (
+      {villas.length && gorunum === 'ay' ? (
         <AyTakvim
           villas={villas}
           reservations={data?.reservations ?? []}
@@ -116,7 +116,7 @@ export default function TakvimEkrani() {
       )}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: space.m, gap: 14 }}>
-        {mode === 'ay' ? (
+        {gorunum === 'ay' ? (
           villas.map((v, i) => <Legend key={v.id} color={villaColor(c, i)} label={v.name.replace(/^Villa\s+/i, '')} />)
         ) : (
           <>
@@ -127,14 +127,14 @@ export default function TakvimEkrani() {
         <Legend color={c.hold} label="Hold" dashed />
       </View>
       <Text style={{ color: c.text3, fontSize: 12, marginTop: 6 }}>
-        {mode === 'ay' ? 'Bir güne dokun: o günün girişleri, çıkışları ve konaklayanlar aşağıda listelenir.' : 'Boş bir güne dokun: o villa ve tarihle yeni rezervasyon açılır.'} Giriş 16:00 · Çıkış 10:00
+        {gorunum === 'ay' ? 'Bir güne dokun: o günün girişleri, çıkışları ve konaklayanlar aşağıda listelenir.' : 'Boş bir güne dokun: o villa ve tarihle yeni rezervasyon açılır.'} Giriş 16:00 · Çıkış 10:00
       </Text>
 
       {view.y !== ym(t).y || view.m !== ym(t).m ? (
         <Button title={`Bugüne dön (${fmt(t, false)})`} kind="ghost" small onPress={() => setView(ym(t))} style={{ marginTop: space.s, alignSelf: 'center' }} />
       ) : null}
 
-      {mode === 'ay' && selDay ? (
+      {gorunum === 'ay' && selDay ? (
         <>
           <SectionTitle right={<Button title="Bu tarihten rezervasyon" icon="add" kind="ghost" small onPress={() => router.push({ pathname: '/rezervasyon/[id]', params: { id: 'yeni', giris: selDay } })} />}>
             {weekdayName(selDay)}, {fmt(selDay)}

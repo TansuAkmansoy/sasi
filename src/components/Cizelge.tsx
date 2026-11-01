@@ -25,7 +25,7 @@ export function Cizelge(props: {
   const first = make(props.year, props.month, 1);
   const days = useMemo(() => Array.from({ length: n }, (_, i) => make(props.year, props.month, i + 1)), [props.year, props.month, n]);
   const t = today();
-  const ref = useRef<ScrollView>(null);
+  const ref = useRef<any>(null);
 
   useEffect(() => {
     const idx = days.indexOf(t);

@@ -24,19 +24,19 @@ export default function TabsLayout() {
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Takvim', tabBarIcon: ({ color, size }) => <Ionicons name="calendar" color={color} size={size} /> }} />
+      <Tabs.Screen name="index" options={{ title: 'Takvim', tabBarIcon: ({ color, size }) => <Ionicons name="calendar" color={color as string} size={size} /> }} />
       <Tabs.Screen
         name="bugun"
         options={{
           title: 'Bugün',
           tabBarBadge: todo > 0 ? todo : undefined,
-          tabBarBadgeStyle: { backgroundColor: c.terra, color: '#fff' },
-          tabBarIcon: ({ color, size }) => <Ionicons name="sunny" color={color} size={size} />,
+          tabBarBadgeStyle: { backgroundColor: c.terra, color: '#fff' as string },
+          tabBarIcon: ({ color, size }) => <Ionicons name="sunny" color={color as string} size={size} />,
         }}
       />
-      <Tabs.Screen name="rezervasyonlar" options={{ title: 'Kayıtlar', tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color} size={size} /> }} />
-      <Tabs.Screen name="arsiv" options={{ title: 'Arşiv', tabBarIcon: ({ color, size }) => <Ionicons name="archive" color={color} size={size} /> }} />
-      <Tabs.Screen name="ayarlar" options={{ title: 'Ayarlar', tabBarIcon: ({ color, size }) => <Ionicons name="settings" color={color} size={size} /> }} />
+      <Tabs.Screen name="rezervasyonlar" options={{ title: 'Kayıtlar', tabBarIcon: ({ color, size }) => <Ionicons name="list" color={color as string} size={size} /> }} />
+      <Tabs.Screen name="arsiv" options={{ title: 'Arşiv', tabBarIcon: ({ color, size }) => <Ionicons name="archive" color={color as string} size={size} /> }} />
+      <Tabs.Screen name="ayarlar" options={{ title: 'Ayarlar', tabBarIcon: ({ color, size }) => <Ionicons name="settings" color={color as string} size={size} /> }} />
     </Tabs>
   );
 }

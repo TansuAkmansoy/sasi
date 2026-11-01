@@ -83,7 +83,7 @@ export const useStore = create<State>((set, get) => ({
       const [raw, tokens] = await Promise.all([AsyncStorage.getItem(CONFIG_KEY), AsyncStorage.getItem(TOKENS_KEY)]);
       if (tokens) set({ linkTokens: JSON.parse(tokens) });
       if (!raw) return set({ phase: 'setup' });
-      const config = { shareBase: DEFAULT_SHARE_BASE, ...(JSON.parse(raw) as Config) };
+      const config = { shareBase: DEFAULT_SHARE_BASE, ...(JSON.parse(raw) as Partial<Config>) } as Config;
       const backend = makeBackend(config);
       set({ config, backend });
       if (config.mode === 'supabase' && !(await hasSession(config.url, config.key))) {
