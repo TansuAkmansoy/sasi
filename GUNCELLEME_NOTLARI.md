@@ -1,6 +1,6 @@
 # Sasi — Güncelleme notları
 
-Durum: **1.2 uygulandı** (1 Kasım 2026). Yeni istekler aşağıya eklenir; "uygula" denmeden koda dokunulmaz.
+Durum: 1.2 uygulandı. **1.3 bekliyor**: "uygula" denmeden koda dokunulmaz.
 
 ## Sürüm 1.1 için istenenler (1 Kasım 2026)
 
@@ -124,3 +124,20 @@ Durum: **1.2 uygulandı** (1 Kasım 2026). Yeni istekler aşağıya eklenir; "uy
 - TCMB günlük kurları (döviz satış): toplam tutarın diğer para birimlerindeki karşılığı hem ücret hesaplama hem rezervasyon ekranında. Rezervasyon ekranında ayrıca rezervasyon günü kuruyla karşılık. Yabancı para ödemede "TCMB kurunu kullan" düğmesi. Kurlar önbellekte tutulur; bağlantı yoksa son bilinen kur gösterilir.
 - Önerilen (fiyat listesi) ve anlaşılan ücret ayrı: anlaşılan ücret kayıtta kalır, önerilen ücret ve fark (tutar ve %) gösterilir.
 - Veritabanı: `supabase/guncelleme-1.2.sql` (tek satır, bir kez çalıştırılır).
+
+## Sürüm 1.3 için istenenler (1 Kasım 2026)
+
+### 1. Google Takvim'e ekle düğmesi görünmüyor
+- Düğme yalnızca kaydedilmiş bir rezervasyonun detayında, durum kartının altında ("Mesaj / WhatsApp" düğmesinin yanında) duruyor. Yeni rezervasyon ekranında yok.
+- Daha kolay bulunur hale getirilecek.
+
+### 2. Kayıtları Google Takvim'e otomatik aktarma
+- Tek düğmeyle tüm rezervasyonlar Google Takvim'e işlenecek; sonraki değişiklikler (tarih değişikliği, iptal) de takvime yansıyacak.
+- Önerilen yöntem: telefonun takvimi üzerinden (expo-calendar). Etkinlikler kullanıcının Google hesabındaki bir takvime yazılır ve Google'a kendiliğinden eşitlenir. Google API anahtarı gerekmez.
+- Not: Android'de uygulama Google hesabında yeni takvim oluşturamaz. Ayrı bir "Sasi" takvimi istenirse kullanıcı bunu bir kez Google Takvim'de (calendar.google.com) oluşturur, uygulamada seçer.
+
+### Netleşmesi gerekenler
+1. Kayıtlar hangi takvime gitsin: ana Google takvimine mi, ayrı bir "Sasi" takvimine mi? (Önerim ayrı takvim; istenirse ortak yöneticiyle de paylaşılabilir.)
+2. Hold'lar da aktarılsın mı (başlıkta "Hold" yazarak), yoksa yalnızca onaylı rezervasyonlar mı?
+3. Aktarım her kayıt ve değişiklikte kendiliğinden mi olsun, yoksa yalnızca düğmeye basınca mı?
+4. Etkinlik biçimi: giriş 16:00'dan çıkış 10:00'a kadar tek uzun etkinlik mi, yoksa giriş ve çıkış günleri için ayrı iki kısa etkinlik mi?
