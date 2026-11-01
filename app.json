@@ -2,7 +2,7 @@
   "expo": {
     "name": "Sasi",
     "slug": "sasi",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "scheme": "sasi",
     "userInterfaceStyle": "automatic",
@@ -10,7 +10,7 @@
     "backgroundColor": "#FBF7F0",
     "android": {
       "package": "com.sasi.villa",
-      "versionCode": 1,
+      "versionCode": 2,
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",

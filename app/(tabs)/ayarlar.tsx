@@ -35,6 +35,8 @@ export default function AyarlarEkrani() {
     <Screen title="Ayarlar">
       <SectionTitle>Fiyat ve kayıt</SectionTitle>
       <Item icon="pricetags-outline" title="Villalar ve aylık fiyatlar" text="Her ay için haftalık ücret" onPress={() => router.push('/fiyatlar')} />
+      <Item icon="document-text-outline" title="Ücretler ve metinler" text="Evcil hayvan ve kısa konaklama ücreti, kiralama şartları, WhatsApp mesajları" onPress={() => router.push('/metinler')} />
+      <Item icon="calculator-outline" title="Ücret hesapla" text="Teklif ve ödeme planı" onPress={() => router.push('/hesapla')} />
       <Item icon="briefcase-outline" title="Acenteler" text={`${data?.agencies.length ?? 0} acente · varsayılan komisyon oranları`} onPress={() => router.push('/acenteler')} />
 
       <SectionTitle>Paylaşım</SectionTitle>

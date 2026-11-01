@@ -25,6 +25,10 @@ const light = {
   today: '#F6C56F',
   free: '#FFFFFF',
   weekend: '#F7F1E6',
+  hold: '#E08E00',
+  holdBg: '#FFE6B0',
+  holdText: '#5A3B00',
+  villa: ['#0F8C93', '#3E6FD8', '#C9562E', '#7B5BC8', '#2E8B57'],
 };
 
 const dark: typeof light = {
@@ -50,6 +54,10 @@ const dark: typeof light = {
   today: '#F6C56F',
   free: '#162227',
   weekend: '#1A282E',
+  hold: '#F5B33D',
+  holdBg: '#4A3510',
+  holdText: '#FFE2A8',
+  villa: ['#2CC2C9', '#6F9BFF', '#F08E5F', '#A98BF0', '#5BC98A'],
 };
 
 export type Colors = typeof light;
@@ -61,7 +69,7 @@ export function useColors(): Colors {
 export function statusColors(c: Colors, s: Status): { bg: string; fg: string; border: string } {
   switch (s) {
     case 'option':
-      return { bg: c.sunSoft, fg: c.text, border: c.sun };
+      return { bg: c.holdBg, fg: c.holdText, border: c.hold };
     case 'confirmed':
       return { bg: c.primary, fg: c.primaryText, border: c.primary };
     case 'completed':
@@ -71,6 +79,11 @@ export function statusColors(c: Colors, s: Status): { bg: string; fg: string; bo
     default:
       return { bg: c.surface2, fg: c.text2, border: c.border };
   }
+}
+
+/** Villanın takvim rengi (sıraya göre) */
+export function villaColor(c: Colors, index: number): string {
+  return c.villa[((index % c.villa.length) + c.villa.length) % c.villa.length];
 }
 
 export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 24 };

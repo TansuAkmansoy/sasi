@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Agency, HistoryEntry, MonthlyPrice, Payment, Reservation, ShareLink, Snapshot, Villa } from '../lib/types';
 import { Backend, ConflictError, reservationRow } from './backend';
+import { mergeSettings } from '../lib/sablon';
 
 let client: SupabaseClient | null = null;
 let clientKey = '';
@@ -47,6 +48,11 @@ function mapReservation(row: any): Reservation {
     commission_pct: num(row.commission_pct),
     commission_minor: num(row.commission_minor),
     deduction_minor: num(row.deduction_minor),
+    stay_minor: num(row.stay_minor),
+    pet: !!row.pet,
+    pet_fee_minor: num(row.pet_fee_minor),
+    short_stay_fee_minor: num(row.short_stay_fee_minor),
+    hold_until: row.hold_until ?? null,
     guests_count: num(row.guests_count),
     payments: ((row.payments ?? []) as any[])
       .map((p) => ({ ...p, amount_minor: Number(p.amount_minor), rate: num(p.rate) }) as Payment)
@@ -75,15 +81,20 @@ export function supabaseBackend(url: string, key: string): Backend {
   return {
     kind: 'supabase',
     async loadAll(): Promise<Snapshot> {
-      const [v, p, a, r, l] = await Promise.all([
+      const [v, p, a, r, l, st] = await Promise.all([
         c.from('villas').select('*').order('sort'),
         c.from('monthly_prices').select('*'),
         c.from('agencies').select('*').order('name'),
         c.from('reservations').select('*, payments(*)').order('check_in'),
         c.from('share_links').select('*').order('created_at', { ascending: false }),
+        c.from('app_settings').select('*'),
       ]);
       for (const x of [v, p, a, r, l]) if (x.error) throw friendly(x.error);
+      // app_settings tablosu yoksa (1.1 güncellemesi çalıştırılmadıysa) varsayılanlar kullanılır
+      const raw: Record<string, any> = {};
+      for (const row of (st.error ? [] : st.data ?? []) as { key: string; value: any }[]) raw[row.key] = row.value;
       return {
+        settings: mergeSettings(raw),
         villas: (v.data ?? []) as Villa[],
         prices: ((p.data ?? []) as any[]).map((x) => ({ ...x, weekly_minor: Number(x.weekly_minor) })) as MonthlyPrice[],
         agencies: ((a.data ?? []) as any[]).map((x) => ({ ...x, default_commission_pct: num(x.default_commission_pct) })) as Agency[],
@@ -145,6 +156,13 @@ export function supabaseBackend(url: string, key: string): Backend {
         .order('changed_at', { ascending: false });
       if (error) throw friendly(error);
       return (data ?? []) as HistoryEntry[];
+    },
+    async saveSetting(key, value) {
+      const { error } = await c.from('app_settings').upsert({ key, value, updated_at: new Date().toISOString() });
+      if (error) {
+        if (/app_settings/.test(error.message)) throw new Error('Veritabanı 1.1 güncellemesi yapılmamış. Supabase\'de guncelleme-1.1.sql dosyasını çalıştır.');
+        throw friendly(error);
+      }
     },
     async signOut() {
       await c.auth.signOut();

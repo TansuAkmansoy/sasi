@@ -56,7 +56,15 @@ export interface Reservation {
   guest_email: string | null;
   guests_count: number | null;
   currency: Currency;
+  /** brüt = konaklama ücreti + evcil hayvan ücreti + kısa konaklama ücreti */
   gross_minor: number;
+  /** konaklama ücreti (gece ücretlerinin toplamı); null ise eski kayıt: brüt − ekstralar */
+  stay_minor: number | null;
+  pet: boolean;
+  pet_fee_minor: number | null;
+  short_stay_fee_minor: number | null;
+  /** hold bitiş anı (ISO zaman damgası) */
+  hold_until: string | null;
   manual_price: boolean;
   agency_id: string | null;
   commission_pct: number | null;
@@ -91,7 +99,32 @@ export interface HistoryEntry {
   changes: Record<string, { old: unknown; new: unknown }> | null;
 }
 
+export interface FeeSettings {
+  currency: Currency;
+  pet_fee_minor: number | null;
+  short_stay_fee_minor: number | null;
+  /** bu geceden az konaklamalar "kısa konaklama" sayılır */
+  short_stay_nights: number;
+  check_in_time: string;
+  check_out_time: string;
+  /** iptal: girişten kaç ay öncesine kadar */
+  cancel_months: number;
+}
+
+export interface TextSettings {
+  usage: string;
+  terms: string;
+  tpl_hold: string;
+  tpl_confirm: string;
+}
+
+export interface AppSettings {
+  fees: FeeSettings;
+  texts: TextSettings;
+}
+
 export interface Snapshot {
+  settings: AppSettings;
   villas: Villa[];
   prices: MonthlyPrice[];
   agencies: Agency[];
@@ -101,11 +134,11 @@ export interface Snapshot {
 }
 
 export const STATUS_LABEL: Record<Status, string> = {
-  option: 'Opsiyon',
+  option: 'Hold',
   confirmed: 'Onaylı',
   completed: 'Tamamlandı',
   cancelled: 'İptal',
-  option_released: 'Opsiyon bırakıldı',
+  option_released: 'Hold bırakıldı',
 };
 
 export const PAYMENT_KIND_LABEL: Record<PaymentKind, string> = {

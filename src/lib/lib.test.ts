@@ -76,7 +76,7 @@ function res(p: Partial<Reservation>): Reservation {
     guest_name: 'X', guest_phone: null, guest_email: null, guests_count: null, currency: 'EUR', gross_minor: 700000,
     manual_price: false, agency_id: null, commission_pct: null, commission_minor: null, invoice_date: null,
     registry_done: false, registry_date: null, note: null, cancel_date: null, cancel_reason: null, refund_status: null,
-    deduction_minor: null, payments: [], ...p,
+    deduction_minor: null, stay_minor: null, pet: false, pet_fee_minor: null, short_stay_fee_minor: null, hold_until: null, payments: [], ...p,
   };
 }
 
@@ -117,4 +117,70 @@ test('bekleyen işler', () => {
   assert.deepEqual(missingOf(res({ registry_done: true, invoice_date: '2026-07-17', payments: [{ kind: 'deposit', amount_minor: 700000, currency: 'EUR', rate: null, method: 'cash', paid_on: '2026-07-01' }] }), '2026-07-18'), []);
   assert.equal(optionDueSoon(res({ status: 'option', option_until: '2026-06-02' }), '2026-06-01'), true);
   assert.equal(optionDueSoon(res({ status: 'option', option_until: '2026-06-05' }), '2026-06-01'), false);
+});
+
+// ---------------- v1.1 ----------------
+import { extrasOf, stayOf, grossOf, isShortStay, minusMonths, cancelDeadline, paymentPlan, holdUntilFromNow } from './ucret.ts';
+import { buildMessage, buildVars, fill, mergeSettings, DEFAULT_FEES } from './sablon.ts';
+import { optionExpired } from './durum.ts';
+
+test('ekstralar ve brüt', () => {
+  assert.equal(grossOf(300000, true, 10000, 15000), 325000);
+  assert.equal(grossOf(300000, false, 10000, null), 300000);
+  const r = res({ gross_minor: 325000, stay_minor: null, pet: true, pet_fee_minor: 10000, short_stay_fee_minor: 15000 });
+  assert.equal(extrasOf(r), 25000);
+  assert.equal(stayOf(r), 300000);
+  assert.equal(stayOf({ ...r, stay_minor: 290000 }), 290000);
+  assert.equal(extrasOf({ pet: false, pet_fee_minor: 10000, short_stay_fee_minor: null }), 0);
+});
+
+test('kısa konaklama: 5 geceden az', () => {
+  assert.equal(isShortStay(4, DEFAULT_FEES), true);
+  assert.equal(isShortStay(5, DEFAULT_FEES), false);
+  assert.equal(isShortStay(0, DEFAULT_FEES), false);
+});
+
+test('iptal son tarihi: girişten 1 ay önce', () => {
+  assert.equal(cancelDeadline('2026-07-15', DEFAULT_FEES), '2026-06-15');
+  assert.equal(minusMonths('2027-03-31', 1), '2027-02-28');
+  assert.equal(minusMonths('2027-01-10', 1), '2026-12-10');
+});
+
+test('ödeme planı', () => {
+  assert.deepEqual(paymentPlan(100000, '2026-06-01', '2026-07-01', 1), [{ date: '2026-07-01', amount_minor: 100000 }]);
+  const p = paymentPlan(100050, '2026-06-01', '2026-07-01', 3);
+  assert.equal(p.length, 3);
+  assert.equal(p.reduce((s, x) => s + x.amount_minor, 0), 100050);
+  assert.deepEqual(p.map((x) => x.date), ['2026-06-11', '2026-06-21', '2026-07-01']);
+  assert.equal(p[0].amount_minor, 33300);
+  assert.deepEqual(paymentPlan(0, '2026-06-01', '2026-07-01', 2), []);
+  assert.deepEqual(paymentPlan(5000, '2026-07-05', '2026-07-01', 3), [{ date: '2026-07-05', amount_minor: 5000 }]);
+});
+
+test('hold süresi saatle', () => {
+  const now = Date.parse('2026-06-01T10:00:00Z');
+  const h = holdUntilFromNow(24, new Date(now));
+  assert.equal(h, '2026-06-02T10:00:00.000Z');
+  assert.equal(optionExpired({ status: 'option', option_until: '2026-06-02', hold_until: h }, '2026-06-02', now + 23 * 3600_000), false);
+  assert.equal(optionExpired({ status: 'option', option_until: '2026-06-02', hold_until: h }, '2026-06-02', now + 24 * 3600_000), true);
+});
+
+test('mesaj şablonu', () => {
+  const s = mergeSettings({ fees: { pet_fee_minor: 10000 } });
+  assert.equal(s.fees.short_stay_nights, 5);
+  assert.equal(fill('A {x} {yok}', { x: '1' }), 'A 1 {yok}');
+  const r = res({ guest_name: 'Ayşe', check_in: '2026-07-10', check_out: '2026-07-14', gross_minor: 425000, stay_minor: 400000, pet: true, pet_fee_minor: 10000, short_stay_fee_minor: 15000, guests_count: 4,
+    payments: [{ kind: 'deposit', amount_minor: 100000, currency: 'EUR', rate: null, method: 'agency', paid_on: '2026-05-01' }] });
+  const v = buildVars(r, { id: 'v', name: 'Villa Poyraz', sort: 1, currency: 'EUR', active: true }, undefined, s);
+  assert.equal(v.giris, '10 Temmuz 2026 Cuma');
+  assert.equal(v.iptal_son_tarih, '10 Haziran 2026 Çarşamba');
+  assert.match(v.ucret_dokumu, /Evcil hayvan ücreti \(tek sefer\): 100 €/);
+  assert.match(v.ucret_dokumu, /TOPLAM: 4\.250 €/);
+  const msg = buildMessage('confirm', r, { id: 'v', name: 'Villa Poyraz', sort: 1, currency: 'EUR', active: true }, undefined, s);
+  assert.match(msg, /Villa Poyraz rezervasyonunuz onaylanmıştır/);
+  assert.match(msg, /Kalan: 3\.250 €/);
+  assert.match(msg, /girişten 1 ay öncesine kadar \(10 Haziran 2026 Çarşamba\)/);
+  assert.doesNotMatch(msg, /\{[a-z_]+\}/);
+  const hold = buildMessage('hold', { ...r, status: 'option', hold_until: '2026-06-02T11:00:00.000Z' }, undefined, undefined, s);
+  assert.doesNotMatch(hold, /\{[a-z_]+\}/);
 });

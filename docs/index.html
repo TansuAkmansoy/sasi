@@ -18,6 +18,7 @@
     --primary: #0F8C93; --primarySoft: #D7F1F2; --deep: #0A5E6B;
     --sun: #F6C56F; --sunSoft: #FDF0D5; --terra: #C9612F; --terraSoft: #FBE4D8;
     --danger: #C53B3B; --dangerSoft: #FBE1E1; --ok: #2E8B57; --okSoft: #DDF2E5; --weekend: #F7F1E6;
+    --hold: #E08E00; --holdBg: #FFE6B0; --holdText: #5A3B00;
     --busy: #0F8C93; --free: #fff;
   }
   @media (prefers-color-scheme: dark) {
@@ -27,6 +28,7 @@
       --primary: #2CC2C9; --primarySoft: #123E43; --deep: #7FD9DD;
       --sunSoft: #3D3220; --terraSoft: #3E2519; --terra: #F08E5F; --dangerSoft: #3D1E1E; --danger: #F07373;
       --okSoft: #183325; --ok: #5BC98A; --weekend: #1A282E; --busy: #2CC2C9; --free: #162227;
+      --hold: #F5B33D; --holdBg: #4A3510; --holdText: #FFE2A8;
     }
   }
   * { box-sizing: border-box; }
@@ -86,7 +88,7 @@
   .tl .td { background: var(--sunSoft) !important; }
   .tl .bar { position: absolute; top: 10px; height: 36px; border-radius: 9px; border: 1.5px solid; padding: 0 6px; font-size: 12px; font-weight: 700; display: flex; align-items: center; white-space: nowrap; overflow: hidden; cursor: pointer; }
   .bar.confirmed { background: var(--primary); border-color: var(--primary); color: #fff; }
-  .bar.option { background: var(--sunSoft); border-color: var(--sun); border-style: dashed; color: var(--text); }
+  .bar.option { background: var(--holdBg); border-color: var(--hold); border-style: dashed; color: var(--holdText); }
   .bar.completed { background: var(--deep); border-color: var(--deep); color: var(--bg); }
   /* kayıt kartı */
   .rc { cursor: pointer; }
@@ -94,7 +96,7 @@
   .rc .t b:first-child { font-size: 16px; }
   .badge { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; margin: 6px 6px 0 0; border: 1px solid transparent; }
   .b-confirmed { background: var(--primarySoft); color: var(--deep); border-color: var(--primary); }
-  .b-option { background: var(--sunSoft); color: var(--text); border-color: var(--sun); }
+  .b-option { background: var(--holdBg); color: var(--holdText); border-color: var(--hold); }
   .b-completed { background: var(--deep); color: var(--bg); }
   .b-cancelled, .b-option_released { background: var(--dangerSoft); color: var(--danger); border-color: var(--danger); }
   .b-warn { background: var(--terraSoft); color: var(--terra); }
@@ -177,7 +179,7 @@ function moneyOf(r) {
   const closed = r.status === 'cancelled' || r.status === 'option_released';
   return { received, refunded, net, remaining: closed ? 0 : Math.max(0, gross - net), commission, netIncome: gross - commission, unconverted };
 }
-const STATUS = { option: 'Opsiyon', confirmed: 'Onaylı', completed: 'Tamamlandı', cancelled: 'İptal', option_released: 'Opsiyon bırakıldı' };
+const STATUS = { option: 'Hold', confirmed: 'Onaylı', completed: 'Tamamlandı', cancelled: 'İptal', option_released: 'Hold bırakıldı' };
 const KIND = { deposit: 'Ön ödeme', interim: 'Ara ödeme', balance: 'Kalan ödeme', refund: 'İade' };
 const METHOD = { cash: 'Nakit', transfer: 'Havale/EFT', card: 'Kredi kartı', agency: 'Acente üzerinden', other: 'Diğer' };
 const REFUND = { pending: 'İade bekliyor', refunded: 'İade edildi', none: 'İade yok' };
@@ -204,7 +206,7 @@ function demoData(kind) {
     R({ villa_id: 'v1', check_in: addDays(t, -9), check_out: addDays(t, -2), guest_name: 'Emma Wilson', currency: 'GBP', gross_minor: 420000, status: 'completed', agency_id: 'a', agency_name: 'Kalkan Holidays', commission_pct: 15, registry_done: true, registry_date: addDays(t, -9), invoice_date: addDays(t, -2), payments: [{ kind: 'deposit', amount_minor: 120000, currency: 'GBP', method: 'transfer', paid_on: addDays(t, -60) }, { kind: 'balance', amount_minor: 300000, currency: 'GBP', method: 'cash', paid_on: addDays(t, -9) }] }),
     R({ villa_id: 'v1', check_in: addDays(t, -2), check_out: addDays(t, 5), guest_name: 'Mehmet Yılmaz', guest_phone: '+90 532 000 00 00', guests_count: 6, gross_minor: 350000, registry_done: true, registry_date: addDays(t, -2), payments: [{ kind: 'deposit', amount_minor: 100000, currency: 'EUR', method: 'transfer', paid_on: addDays(t, -40) }] }),
     R({ villa_id: 'v2', check_in: t, check_out: addDays(t, 10), guest_name: 'James Brown', guests_count: 4, gross_minor: 600000, agency_id: 'b', agency_name: 'Villa Agency UK', commission_pct: 20, payments: [{ kind: 'deposit', amount_minor: 200000, currency: 'EUR', method: 'agency', paid_on: addDays(t, -30) }] }),
-    R({ villa_id: 'v3', status: 'option', option_until: addDays(t, 1), check_in: addDays(t, 12), check_out: addDays(t, 19), guest_name: 'Sophie Taylor', currency: 'GBP', gross_minor: 304000 }),
+    R({ villa_id: 'v3', status: 'option', option_until: addDays(t, 1), hold_until: new Date(Date.now() + 20 * 3600000).toISOString(), pet: true, pet_fee_minor: 7500, check_in: addDays(t, 12), check_out: addDays(t, 19), guest_name: 'Sophie Taylor', currency: 'GBP', gross_minor: 304000 }),
     R({ villa_id: 'v1', check_in: addDays(t, 5), check_out: addDays(t, 13), guest_name: 'Ayşe Demir', gross_minor: 457100, note: 'Havalimanı transferi istendi' }),
     R({ villa_id: 'v2', status: 'cancelled', check_in: addDays(t, 20), check_out: addDays(t, 27), guest_name: 'Oliver Smith', gross_minor: 420000, cancel_date: addDays(t, -3), cancel_reason: 'Uçuş iptali', refund_status: 'pending', deduction_minor: 50000, payments: [{ kind: 'deposit', amount_minor: 100000, currency: 'EUR', method: 'transfer', paid_on: addDays(t, -50) }] }),
   ];
@@ -274,14 +276,14 @@ function renderAdmin(d) {
       rows += `<div class="vrow">${cells}${bars}</div>`;
     }
     h += `<div class="tl"><div class="names"><div></div>${d.villas.map((v) => `<div>${esc(v.name.replace(/^Villa\s+/i, ''))}</div>`).join('')}</div><div class="scroll" id="tlscroll"><div class="grid" style="width:${n * W}px"><div class="hrow">${head}</div>${rows}</div></div></div>`;
-    h += `<div class="legend"><span><i style="background:var(--primary)"></i>Onaylı</span><span><i style="background:var(--sunSoft);border:1.5px dashed var(--sun)"></i>Opsiyon</span><span><i style="background:var(--deep)"></i>Tamamlandı</span></div>`;
+    h += `<div class="legend"><span><i style="background:var(--primary)"></i>Onaylı</span><span><i style="background:var(--holdBg);border:1.5px dashed var(--hold)"></i>Hold</span><span><i style="background:var(--deep)"></i>Tamamlandı</span></div>`;
     const monthRes = d.reservations.filter((r) => ACTIVE.includes(r.status) && r.check_in <= mk(view.y, view.m, n) && r.check_out > first);
     h += `<h3 style="margin:18px 0 8px">Bu ay (${monthRes.length})</h3>` + monthRes.map((r) => card(r, vName, today)).join('');
   }
 
   if (tab === 'list') {
     h += `<input class="search" id="q" placeholder="Misafir, telefon, acente, not…" value="${esc(query)}">`;
-    h += [['upcoming', 'Yaklaşan'], ['now', 'Şu an'], ['option', 'Opsiyon'], ['completed', 'Arşiv'], ['cancelled', 'İptal'], ['all', 'Tümü']].map(([k, l]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('');
+    h += [['upcoming', 'Yaklaşan'], ['now', 'Şu an'], ['option', 'Hold'], ['completed', 'Arşiv'], ['cancelled', 'İptal'], ['all', 'Tümü']].map(([k, l]) => `<button class="chip ${filter === k ? 'on' : ''}" data-f="${k}">${l}</button>`).join('');
     const ql = query.trim().toLocaleLowerCase('tr-TR');
     let list = d.reservations.filter((r) => {
       switch (filter) {
@@ -349,7 +351,8 @@ function card(r, vName, today) {
     if (m.remaining > 0 && r.check_in <= addDays(today, 14)) warn.push('Ödeme eksik');
   }
   if (r.status === 'confirmed' && r.check_out <= today) warn.push('Arşive alınmayı bekliyor');
-  if (r.status === 'option' && r.option_until) warn.push((r.option_until <= today ? 'Opsiyon süresi doldu ' : 'Opsiyon bitişi ') + fmt(r.option_until, false));
+  if (r.status === 'option' && (r.hold_until || r.option_until)) { const exp = r.hold_until ? Date.parse(r.hold_until) <= Date.now() : r.option_until <= today; warn.push((exp ? 'Hold süresi doldu ' : 'Hold bitişi ') + (r.hold_until ? new Date(r.hold_until).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : fmt(r.option_until, false))); }
+  if (r.pet) warn.push('Evcil hayvan');
   let h = `<div class="card rc" data-open="${esc(r.id)}"><div class="t"><b>${esc(r.guest_name || 'Misafir')}</b><b>${money(r.gross_minor, r.currency)}</b></div>
     <div class="small muted">${esc(vName(r.villa_id))} · ${fmtR(r.check_in, r.check_out)} · ${n} gece${r.agency_name ? ' · ' + esc(r.agency_name) : ''}</div>
     <span class="badge b-${r.status}">${STATUS[r.status]}</span>${warn.map((w) => `<span class="badge b-warn">${esc(w)}</span>`).join('')}`;
@@ -361,6 +364,7 @@ function card(r, vName, today) {
       ${r.guests_count ? `<div class="row"><span>Kişi</span><b>${r.guests_count}</b></div>` : ''}
       <div class="row"><span>Giriş / çıkış</span><b>${fmt(r.check_in)} 16:00 → ${fmt(r.check_out)} 10:00</b></div>
       <h4>Ücret</h4>
+      ${(() => { const pf = r.pet ? Number(r.pet_fee_minor || 0) : 0, sf = Number(r.short_stay_fee_minor || 0); const stay = r.stay_minor != null ? Number(r.stay_minor) : Number(r.gross_minor) - pf - sf; return (pf || sf) ? `<div class="row"><span>Konaklama</span><b>${money(stay, r.currency)}</b></div>${pf ? `<div class="row"><span>Evcil hayvan (tek sefer)</span><b>${money(pf, r.currency)}</b></div>` : ''}${sf ? `<div class="row"><span>Kısa konaklama</span><b>${money(sf, r.currency)}</b></div>` : ''}` : ''; })()}
       <div class="row"><span>Brüt</span><b>${money(r.gross_minor, r.currency)}</b></div>
       ${r.agency_id ? `<div class="row"><span>Komisyon${r.commission_pct != null ? ' (%' + String(r.commission_pct).replace('.', ',') + ')' : ''}</span><b>${money(m.commission, r.currency)}</b></div><div class="row"><span>Net</span><b>${money(m.netIncome, r.currency)}</b></div>` : '<div class="row"><span>Kanal</span><b>Direkt</b></div>'}
       <div class="row"><span>Alınan</span><b>${money(m.net, r.currency)}</b></div>

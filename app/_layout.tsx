@@ -25,7 +25,7 @@ export default function RootLayout() {
     if (phase !== 'loading') SplashScreen.hideAsync().catch(() => {});
   }, [phase]);
 
-  // Opsiyon bildirimine dokununca ilgili rezervasyonu aç
+  // Hold bildirimine dokununca ilgili rezervasyonu aç
   useEffect(() => {
     if (phase !== 'ready') return;
     const sub = Notifications.addNotificationResponseReceivedListener((resp) => {
@@ -52,6 +52,9 @@ export default function RootLayout() {
           <Stack.Screen name="fiyatlar" />
           <Stack.Screen name="acenteler" />
           <Stack.Screen name="paylasim" />
+          <Stack.Screen name="mesaj/[id]" />
+          <Stack.Screen name="hesapla" />
+          <Stack.Screen name="metinler" />
         </Stack>
       )}
     </SafeAreaProvider>

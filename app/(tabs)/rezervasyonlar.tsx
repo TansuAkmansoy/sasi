@@ -57,7 +57,7 @@ export default function KayitlarEkrani() {
       <Field label="Ara" placeholder="Misafir, telefon, acente, not…" value={q} onChangeText={setQ} autoCorrect={false} />
       <ChipRow>
         <Chip label="Yaklaşan" selected={filter === 'upcoming'} onPress={() => setFilter('upcoming')} />
-        <Chip label="Opsiyon" selected={filter === 'option'} onPress={() => setFilter('option')} />
+        <Chip label="Hold" selected={filter === 'option'} onPress={() => setFilter('option')} />
         <Chip label="Onay bekleyen" selected={filter === 'awaiting'} onPress={() => setFilter('awaiting')} />
         <Chip label="İptal" selected={filter === 'cancelled'} onPress={() => setFilter('cancelled')} />
         <Chip label="Tümü" selected={filter === 'all'} onPress={() => setFilter('all')} />

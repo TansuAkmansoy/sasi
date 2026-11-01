@@ -31,16 +31,24 @@ import { money, moneyInput, parseMoney, parseNumber, SYMBOL } from '../../src/li
 import { calcPrice } from '../../src/lib/fiyat';
 import { awaitingCompletion, busyNights, commissionOf, findConflict, missingOf, moneyOf, MISSING_LABEL, optionExpired } from '../../src/lib/durum';
 import { ConflictError } from '../../src/data/backend';
+import { grossOf, holdUntilFromNow, isShortStay, localDateOf, localTimeOf, stayOf } from '../../src/lib/ucret';
+import { googleCalendarUrl } from '../../src/lib/gtakvim';
 
 type Form = Omit<Reservation, 'payments'>;
 
 function emptyForm(villaId: string, currency: Currency, checkIn: string, checkOut: string): Form {
+  const hold = holdUntilFromNow(24);
   return {
     villa_id: villaId,
-    status: 'confirmed',
+    status: 'option',
     check_in: checkIn,
     check_out: checkOut,
-    option_until: null,
+    option_until: localDateOf(hold),
+    hold_until: hold,
+    stay_minor: null,
+    pet: false,
+    pet_fee_minor: null,
+    short_stay_fee_minor: null,
     guest_name: '',
     guest_phone: null,
     guest_email: null,
@@ -63,7 +71,8 @@ function emptyForm(villaId: string, currency: Currency, checkIn: string, checkOu
 }
 
 const FIELD_LABEL: Record<string, string> = {
-  villa_id: 'Villa', status: 'Durum', check_in: 'Giriş', check_out: 'Çıkış', option_until: 'Opsiyon bitişi', guest_name: 'Misafir',
+  villa_id: 'Villa', status: 'Durum', check_in: 'Giriş', check_out: 'Çıkış', option_until: 'Hold bitiş günü', hold_until: 'Hold bitişi',
+  stay_minor: 'Konaklama ücreti', pet: 'Evcil hayvan', pet_fee_minor: 'Evcil hayvan ücreti', short_stay_fee_minor: 'Kısa konaklama ücreti', guest_name: 'Misafir',
   guest_phone: 'Telefon', guest_email: 'E-posta', guests_count: 'Kişi sayısı', currency: 'Para birimi', gross_minor: 'Brüt ücret',
   manual_price: 'Elle fiyat', agency_id: 'Acente', commission_pct: 'Komisyon %', commission_minor: 'Komisyon tutarı',
   invoice_date: 'Fatura tarihi', registry_done: 'Konaklama defteri', registry_date: 'Defter tarihi', note: 'Not',
@@ -72,7 +81,11 @@ const FIELD_LABEL: Record<string, string> = {
 
 export default function RezervasyonEkrani() {
   const c = useColors();
-  const params = useLocalSearchParams<{ id: string; villa?: string; giris?: string; cikis?: string }>();
+  const params = useLocalSearchParams<{
+    id: string; villa?: string; giris?: string; cikis?: string;
+    // Ücret hesaplama ekranından gelenler
+    konaklama?: string; elle?: string; evcil?: string; kisa?: string; acente?: string; komisyon?: string; paraBirimi?: string;
+  }>();
   const isNew = params.id === 'yeni';
   const data = useStore((s) => s.data);
   const backend = useStore((s) => s.backend);
@@ -86,18 +99,33 @@ export default function RezervasyonEkrani() {
   const initial = useMemo(() => {
     if (existing) {
       const { payments, ...f } = existing;
-      return { form: f as Form, payments };
+      return { form: { ...f, stay_minor: stayOf(existing) } as Form, payments };
     }
     const v = villas.find((x) => x.id === params.villa) ?? villas[0];
     const ci = params.giris ?? '';
     const co = params.cikis ?? (ci ? addDays(ci, 7) : '');
-    return { form: emptyForm(v?.id ?? '', v?.currency ?? 'EUR', ci, co), payments: [] as Payment[] };
+    const f = emptyForm(v?.id ?? '', v?.currency ?? 'EUR', ci, co);
+    if (params.konaklama) {
+      const num = (x?: string) => (x ? Number(x) : null);
+      f.stay_minor = num(params.konaklama);
+      f.manual_price = params.elle === '1';
+      f.pet = !!params.evcil;
+      f.pet_fee_minor = num(params.evcil);
+      f.short_stay_fee_minor = num(params.kisa);
+      f.agency_id = params.acente || null;
+      f.commission_pct = params.komisyon ? Number(params.komisyon.replace(',', '.')) : null;
+      if (params.paraBirimi) f.currency = params.paraBirimi as Currency;
+      f.gross_minor = grossOf(f.stay_minor ?? 0, f.pet, f.pet_fee_minor, f.short_stay_fee_minor);
+    }
+    return { form: f, payments: [] as Payment[] };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing?.id, existing?.updated_at]);
 
   const [form, setForm] = useState<Form>(initial.form);
   const [payments, setPayments] = useState<Payment[]>(initial.payments);
-  const [grossText, setGrossText] = useState(moneyInput(initial.form.gross_minor || null));
+  const [grossText, setGrossText] = useState(moneyInput(initial.form.stay_minor || null));
+  const [petText, setPetText] = useState(moneyInput(initial.form.pet_fee_minor));
+  const [shortText, setShortText] = useState(moneyInput(initial.form.short_stay_fee_minor));
   const [commMode, setCommMode] = useState<'pct' | 'amount'>(initial.form.commission_minor != null ? 'amount' : 'pct');
   const [commText, setCommText] = useState(
     initial.form.commission_minor != null ? moneyInput(initial.form.commission_minor) : initial.form.commission_pct != null ? String(initial.form.commission_pct).replace('.', ',') : '',
@@ -115,7 +143,9 @@ export default function RezervasyonEkrani() {
   useEffect(() => {
     setForm(initial.form);
     setPayments(initial.payments);
-    setGrossText(moneyInput(initial.form.gross_minor || null));
+    setGrossText(moneyInput(initial.form.stay_minor || null));
+    setPetText(moneyInput(initial.form.pet_fee_minor));
+    setShortText(moneyInput(initial.form.short_stay_fee_minor));
     baseline.current = JSON.stringify({ f: initial.form, p: initial.payments });
   }, [initial]);
 
@@ -155,11 +185,34 @@ export default function RezervasyonEkrani() {
 
   useEffect(() => {
     if (form.manual_price || !priceUsable || !(isNew || priceTouched)) return;
-    if (form.gross_minor !== price.total_minor) {
-      setForm((f) => ({ ...f, gross_minor: price.total_minor }));
+    if (form.stay_minor !== price.total_minor) {
+      setForm((f) => ({ ...f, stay_minor: price.total_minor }));
       setGrossText(moneyInput(price.total_minor));
     }
-  }, [priceUsable, price.total_minor, form.manual_price, form.gross_minor, isNew, priceTouched]);
+  }, [priceUsable, price.total_minor, form.manual_price, form.stay_minor, isNew, priceTouched]);
+
+  // Brüt = konaklama + ekstralar (her zaman)
+  useEffect(() => {
+    const g = grossOf(form.stay_minor ?? 0, form.pet, form.pet_fee_minor, form.short_stay_fee_minor);
+    if (g !== form.gross_minor) setForm((f) => ({ ...f, gross_minor: g }));
+  }, [form.stay_minor, form.pet, form.pet_fee_minor, form.short_stay_fee_minor, form.gross_minor]);
+
+  // Kısa konaklama: 5 geceden azsa varsayılan ücreti öner, uzarsa kaldır
+  const fees = data?.settings.fees;
+  const nightsN = form.check_in && form.check_out ? nights(form.check_in, form.check_out) : 0;
+  const shortStay = !!fees && isShortStay(nightsN, fees);
+  useEffect(() => {
+    if (!fees || !(isNew || priceTouched)) return;
+    if (shortStay && form.short_stay_fee_minor == null && fees.short_stay_fee_minor != null && fees.currency === form.currency) {
+      setForm((f) => ({ ...f, short_stay_fee_minor: fees.short_stay_fee_minor }));
+      setShortText(moneyInput(fees.short_stay_fee_minor));
+    }
+    if (!shortStay && nightsN > 0 && form.short_stay_fee_minor != null) {
+      setForm((f) => ({ ...f, short_stay_fee_minor: null }));
+      setShortText('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shortStay, nightsN, isNew, priceTouched, form.currency]);
 
   // ---- komisyon ----
   useEffect(() => {
@@ -185,7 +238,7 @@ export default function RezervasyonEkrani() {
     if (!f.check_in || !f.check_out) return 'Giriş ve çıkış tarihlerini seç.';
     if (f.check_out <= f.check_in) return 'Çıkış, girişten sonra olmalı.';
     if (!f.guest_name.trim()) return 'Misafirin adını yaz.';
-    if (f.status === 'option' && !f.option_until) return 'Opsiyon bitiş tarihini seç.';
+    if (f.status === 'option' && !f.option_until) return 'Hold bitişini seç (24 saat, 48 saat ya da tarih).';
     if (f.agency_id && commText.trim() && (commMode === 'pct' ? parseNumber(commText) : parseMoney(commText)) == null) return 'Komisyon değeri okunamadı.';
     return null;
   }
@@ -227,10 +280,10 @@ export default function RezervasyonEkrani() {
 
   // ---- durum eylemleri ----
   function confirmOption() {
-    save({ status: 'confirmed', option_until: null }, 'stay');
+    save({ status: 'confirmed', option_until: null, hold_until: null }, 'stay');
   }
   function releaseOption() {
-    Alert.alert('Opsiyonu bırak', 'Tarihler boşalır ve başkasına satılabilir. Kayıt "Opsiyon bırakıldı" olarak saklanır.', [
+    Alert.alert('Hold\'u bırak', 'Tarihler boşalır ve başkasına satılabilir. Kayıt "Hold bırakıldı" olarak saklanır.', [
       { text: 'Vazgeç', style: 'cancel' },
       { text: 'Bırak', style: 'destructive', onPress: () => save({ status: 'option_released' }, 'stay') },
     ]);
@@ -288,15 +341,19 @@ export default function RezervasyonEkrani() {
         <Card style={{ borderColor: stCol.border, borderWidth: 1.5 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' }}>
             <Badge label={STATUS_LABEL[st]} bg={st === 'confirmed' ? c.primarySoft : stCol.bg} fg={st === 'confirmed' ? c.deep : stCol.fg} border={stCol.border} />
-            {existing && optionExpired(existing, t) ? <Badge label="Opsiyon süresi doldu" bg={c.dangerSoft} fg={c.danger} icon="time-outline" /> : null}
+            {existing && optionExpired(existing, t) ? <Badge label="Hold süresi doldu" bg={c.dangerSoft} fg={c.danger} icon="time-outline" /> : null}
             {existing && awaitingCompletion(existing, t) ? <Badge label="Konaklama bitti" bg={c.terraSoft} fg={c.terra} /> : null}
           </View>
           {st === 'option' ? (
             <>
-              <Muted style={{ marginTop: 8 }}>Opsiyon bitişi: {fmt(form.option_until)}. Uzatmak için aşağıdan tarihi değiştirip kaydet.</Muted>
+              <Muted style={{ marginTop: 8 }}>Hold bitişi: {holdText(existing?.hold_until ?? null, existing?.option_until ?? null)}</Muted>
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 12 }}>
-                <Button title="Onayla" icon="checkmark-circle-outline" small style={{ flex: 1 }} onPress={confirmOption} />
+                <Button title="Onayla, tarihleri kapat" icon="checkmark-circle-outline" small style={{ flex: 2 }} onPress={confirmOption} />
                 <Button title="Bırak" kind="danger" small style={{ flex: 1 }} onPress={releaseOption} />
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 8 }}>
+                <Button title="+24 saat uzat" kind="secondary" small style={{ flex: 1 }} onPress={() => { const h = holdUntilFromNow(24); save({ hold_until: h, option_until: localDateOf(h) }, 'stay'); }} />
+                <Button title="+48 saat uzat" kind="secondary" small style={{ flex: 1 }} onPress={() => { const h = holdUntilFromNow(48); save({ hold_until: h, option_until: localDateOf(h) }, 'stay'); }} />
               </View>
             </>
           ) : null}
@@ -319,13 +376,44 @@ export default function RezervasyonEkrani() {
       ) : (
         <Segmented
           value={form.status === 'option' ? 'option' : 'confirmed'}
-          onChange={(v) => setForm((f) => ({ ...f, status: v, option_until: v === 'option' ? f.option_until ?? addDays(t, 3) : null }))}
+          onChange={(v) =>
+            setForm((f) => {
+              if (v === 'confirmed') return { ...f, status: v, option_until: null, hold_until: null };
+              const h = f.hold_until ?? holdUntilFromNow(24);
+              return { ...f, status: v, hold_until: h, option_until: localDateOf(h) };
+            })
+          }
           options={[
-            { value: 'confirmed', label: 'Onaylı' },
-            { value: 'option', label: 'Opsiyon' },
+            { value: 'option', label: 'Hold (talep)' },
+            { value: 'confirmed', label: 'Onaylı (tarihleri kapat)' },
           ]}
         />
       )}
+      {isNew && form.status === 'option' ? (
+        <Card>
+          <Text style={{ color: c.text2, fontSize: 13, fontWeight: '600', marginBottom: 6 }}>Hold süresi</Text>
+          <ChipRow>
+            <Chip label="24 saat" onPress={() => { const h = holdUntilFromNow(24); setForm((f) => ({ ...f, hold_until: h, option_until: localDateOf(h) })); }} selected={holdHours(form.hold_until) === 24} />
+            <Chip label="48 saat" onPress={() => { const h = holdUntilFromNow(48); setForm((f) => ({ ...f, hold_until: h, option_until: localDateOf(h) })); }} selected={holdHours(form.hold_until) === 48} />
+            <Chip label="Tarih seç" icon="calendar-outline" onPress={() => setPicker('option')} />
+          </ChipRow>
+          <Muted>Bitiş: {holdText(form.hold_until, form.option_until)}. Bitmeden 2 saat önce ve bittiğinde hatırlatma gelir; kararı sen verirsin.</Muted>
+        </Card>
+      ) : null}
+
+      {!isNew && existing ? (
+        <View style={{ flexDirection: 'row', gap: 8, marginBottom: 4 }}>
+          <Button title="Mesaj / WhatsApp" icon="logo-whatsapp" small style={{ flex: 1 }} onPress={() => router.push({ pathname: '/mesaj/[id]', params: { id: existing.id! } })} />
+          <Button
+            title="Google Takvim"
+            icon="calendar-outline"
+            kind="secondary"
+            small
+            style={{ flex: 1 }}
+            onPress={() => Linking.openURL(googleCalendarUrl(existing, villaName(existing.villa_id), data!.settings.fees))}
+          />
+        </View>
+      ) : null}
 
       {/* Villa ve tarih */}
       <SectionTitle>Villa ve tarih</SectionTitle>
@@ -353,8 +441,8 @@ export default function RezervasyonEkrani() {
       ) : form.check_in ? (
         <Text style={{ color: c.text3, fontSize: 12, marginTop: -6, marginBottom: 8 }}>Giriş 16:00 · Çıkış 10:00</Text>
       ) : null}
-      {form.status === 'option' ? (
-        <PickerField label="Opsiyon bitiş tarihi" value={fmt(form.option_until)} icon="time-outline" onPress={() => setPicker('option')} />
+      {!isNew && form.status === 'option' ? (
+        <PickerField label="Hold bitişi" value={holdText(form.hold_until, form.option_until)} icon="time-outline" onPress={() => setPicker('option')} />
       ) : null}
 
       {/* Misafir */}
@@ -411,29 +499,65 @@ export default function RezervasyonEkrani() {
           <Muted style={{ marginBottom: 8 }}>Tarih seçince fiyat haftalık ücretlerden otomatik hesaplanır.</Muted>
         )}
         <Field
-          label="Brüt ücret"
+          label={`Konaklama ücreti${nightsN ? ` (${nightsN} gece)` : ''}`}
           value={grossText}
           onChangeText={(v) => {
             setGrossText(v);
             const n = parseMoney(v);
-            setForm((f) => ({ ...f, gross_minor: n ?? 0, manual_price: true }));
+            setForm((f) => ({ ...f, stay_minor: n ?? 0, manual_price: true }));
           }}
           keyboardType="decimal-pad"
           suffix={SYMBOL[form.currency]}
           hint={form.manual_price ? 'Elle girildi' : priceUsable ? 'Otomatik hesaplandı' : undefined}
           containerStyle={{ marginBottom: 4 }}
         />
-        {form.manual_price && priceUsable && form.gross_minor !== price.total_minor ? (
+        {form.manual_price && priceUsable && form.stay_minor !== price.total_minor ? (
           <Button
             title={`Hesaplanana dön (${money(price.total_minor, form.currency)})`}
             kind="ghost"
             small
             onPress={() => {
-              setForm((f) => ({ ...f, manual_price: false, gross_minor: price.total_minor }));
+              setForm((f) => ({ ...f, manual_price: false, stay_minor: price.total_minor }));
               setGrossText(moneyInput(price.total_minor));
             }}
           />
         ) : null}
+        <Divider />
+        <Toggle
+          label="Evcil hayvan gelecek"
+          hint="Tek seferlik ücret"
+          value={form.pet}
+          onChange={(v) => {
+            setForm((f) => {
+              const fee = v && f.pet_fee_minor == null && fees?.pet_fee_minor != null && fees.currency === f.currency ? fees.pet_fee_minor : f.pet_fee_minor;
+              if (fee !== f.pet_fee_minor) setPetText(moneyInput(fee));
+              return { ...f, pet: v, pet_fee_minor: fee };
+            });
+          }}
+        />
+        {form.pet ? (
+          <Field
+            label="Evcil hayvan ücreti (tek sefer)"
+            value={petText}
+            onChangeText={(v) => { setPetText(v); set('pet_fee_minor', parseMoney(v)); }}
+            keyboardType="decimal-pad"
+            suffix={SYMBOL[form.currency]}
+            containerStyle={{ marginTop: 6 }}
+          />
+        ) : null}
+        {shortStay || form.short_stay_fee_minor != null ? (
+          <Field
+            label={`Kısa konaklama ücreti${shortStay ? ` (${fees?.short_stay_nights ?? 5} geceden az)` : ''}`}
+            value={shortText}
+            onChangeText={(v) => { setShortText(v); set('short_stay_fee_minor', parseMoney(v)); }}
+            keyboardType="decimal-pad"
+            suffix={SYMBOL[form.currency]}
+            hint={shortStay && form.short_stay_fee_minor == null ? 'Bu konaklama kısa; ücreti gir.' : undefined}
+            containerStyle={{ marginTop: 6 }}
+          />
+        ) : null}
+        <Divider />
+        <Row label="Toplam (brüt)" value={money(form.gross_minor, form.currency)} strong />
       </Card>
 
       {/* Acente */}
@@ -603,11 +727,16 @@ export default function RezervasyonEkrani() {
       <TakvimSecici
         visible={picker === 'option' || picker === 'invoice' || picker === 'registry' || picker === 'cancel'}
         mode="single"
-        title={{ option: 'Opsiyon bitiş tarihi', invoice: 'Fatura tarihi', registry: 'Defter kayıt tarihi', cancel: 'İptal tarihi' }[picker as 'option'] ?? 'Tarih'}
+        title={{ option: 'Hold bitiş günü', invoice: 'Fatura tarihi', registry: 'Defter kayıt tarihi', cancel: 'İptal tarihi' }[picker as 'option'] ?? 'Tarih'}
         value={picker === 'option' ? form.option_until : picker === 'invoice' ? form.invoice_date : picker === 'registry' ? form.registry_date : form.cancel_date}
         onCancel={() => setPicker(null)}
         onConfirm={(d) => {
-          if (picker === 'option') set('option_until', d);
+          if (picker === 'option') {
+            const now = new Date();
+            const [y, mo, da] = d.split('-').map(Number);
+            const h = new Date(y, mo - 1, da, now.getHours(), now.getMinutes()).toISOString();
+            setForm((f) => ({ ...f, option_until: d, hold_until: h }));
+          }
           if (picker === 'invoice') set('invoice_date', d);
           if (picker === 'registry') set('registry_date', d);
           if (picker === 'cancel') set('cancel_date', d);
@@ -751,4 +880,19 @@ function OdemeDuzenle(props: {
       <TakvimSecici visible={dateOpen} mode="single" title="Ödeme tarihi" value={p.paid_on} onCancel={() => setDateOpen(false)} onConfirm={(d) => { setP({ ...p, paid_on: d }); setDateOpen(false); }} />
     </Modal>
   );
+}
+
+function holdHours(holdUntil: string | null): number | null {
+  if (!holdUntil) return null;
+  const h = Math.round((Date.parse(holdUntil) - Date.now()) / 3600_000);
+  return h === 24 || h === 23 ? 24 : h === 48 || h === 47 ? 48 : null;
+}
+
+function holdText(holdUntil: string | null, optionUntil: string | null): string {
+  if (holdUntil) {
+    const left = Date.parse(holdUntil) - Date.now();
+    const leftTxt = left <= 0 ? 'süresi doldu' : left < 3600_000 ? `${Math.max(1, Math.round(left / 60000))} dk kaldı` : `${Math.round(left / 3600_000)} saat kaldı`;
+    return `${fmt(localDateOf(holdUntil))} ${localTimeOf(holdUntil)} (${leftTxt})`;
+  }
+  return optionUntil ? fmt(optionUntil) : '—';
 }

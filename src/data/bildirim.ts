@@ -3,7 +3,7 @@ import * as Notifications from 'expo-notifications';
 import type { Reservation, Villa } from '../lib/types';
 import { addDays, fmtRange } from '../lib/tarih';
 
-// Opsiyon bitiş hatırlatmaları: bitişten bir gün önce ve bitiş günü saat 09:00'da.
+// Hold hatırlatmaları: saatli hold'da bitişten 2 saat önce ve bitişte; eski günlük kayıtlarda bir gün önce ve bitiş günü 09:00.
 
 let ready = false;
 
@@ -20,7 +20,7 @@ export async function setupNotifications(): Promise<boolean> {
       });
       if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('opsiyon', {
-          name: 'Opsiyon hatırlatmaları',
+          name: 'Hold hatırlatmaları',
           importance: Notifications.AndroidImportance.HIGH,
         });
       }
@@ -50,10 +50,15 @@ export async function syncOptionReminders(reservations: Reservation[], villas: V
       if (r.status !== 'option' || !r.option_until) continue;
       const villa = villas.find((v) => v.id === r.villa_id)?.name ?? 'Villa';
       const who = r.guest_name || 'Misafir';
-      const plan = [
-        { when: at9(addDays(r.option_until, -1)), title: 'Opsiyon yarın bitiyor', },
-        { when: at9(r.option_until), title: 'Opsiyon bugün bitiyor' },
-      ];
+      const plan = r.hold_until
+        ? [
+            { when: new Date(Date.parse(r.hold_until) - 2 * 3600_000), title: 'Hold 2 saat sonra bitiyor' },
+            { when: new Date(Date.parse(r.hold_until)), title: 'Hold süresi doldu' },
+          ]
+        : [
+            { when: at9(addDays(r.option_until, -1)), title: 'Hold yarın bitiyor' },
+            { when: at9(r.option_until), title: 'Hold bugün bitiyor' },
+          ];
       for (const p of plan) {
         if (p.when.getTime() <= now) continue;
         await Notifications.scheduleNotificationAsync({
@@ -67,6 +72,6 @@ export async function syncOptionReminders(reservations: Reservation[], villas: V
       }
     }
   } catch {
-    // Bildirim kurulamadıysa uygulama yine de çalışır; opsiyonlar "Bugün" ekranında görünür.
+    // Bildirim kurulamadıysa uygulama yine de çalışır; hold'lar "Bugün" ekranında görünür.
   }
 }

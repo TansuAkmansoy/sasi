@@ -18,6 +18,9 @@ Kalkan/Kaş'taki villaların (Villa Poyraz, Villa Seascape, Villa Shipahoy) reze
 4. **Authentication → Sign In / Providers** (ya da *Settings*): **Allow new users to sign up** seçeneğini **kapat**. Böylece uygulamaya senden başka kimse hesap açamaz.
 5. **Project Settings → API Keys** (ya da üstteki **Connect** düğmesi): *Project URL* ve **anon / publishable** anahtarını kopyala. `service_role` / `secret` anahtarını asla kullanma.
 
+### 1b. Sürüm 1.1 güncellemesi
+Daha önce kurulum yaptıysan SQL Editor'de `supabase/guncelleme-1.1.sql` dosyasını bir kez çalıştır. (Yeni kurulumda `kurulum.sql` bunu içerir.)
+
 ### 2. Paylaşım sayfası (GitHub Pages)
 Repo → **Settings → Pages** → *Source*: **Deploy from a branch** → Branch: **main**, klasör: **/docs** → **Save**.
 Birkaç dakika sonra sayfa `https://tansuakmansoy.github.io/sasi/` adresinde açılır.

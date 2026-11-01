@@ -6,6 +6,7 @@ import type { Backend } from './data/backend';
 import { supabaseBackend, signIn, hasSession } from './data/supabase';
 import { demoBackend } from './data/demo';
 import { syncOptionReminders } from './data/bildirim';
+import { mergeSettings } from './lib/sablon';
 
 export const DEFAULT_SHARE_BASE = 'https://tansuakmansoy.github.io/sasi/';
 
@@ -47,6 +48,7 @@ interface State {
   deleteAgency(id: string): Promise<void>;
   createLink(label: string, kind: LinkKind): Promise<string>;
   revokeLink(id: string): Promise<void>;
+  saveSetting(key: 'fees' | 'texts', value: unknown): Promise<void>;
   linkUrl(id: string): string | null;
 }
 
@@ -159,7 +161,11 @@ export const useStore = create<State>((set, get) => ({
       const msg = (e as Error).message;
       if (!get().data) {
         const cached = await AsyncStorage.getItem(CACHE_KEY);
-        if (cached) return set({ data: JSON.parse(cached), offline: true, error: msg });
+        if (cached) {
+          const d = JSON.parse(cached) as Snapshot;
+          d.settings = mergeSettings(d.settings);
+          return set({ data: d, offline: true, error: msg });
+        }
       }
       set({ offline: !!get().data, error: msg });
     } finally {
@@ -209,6 +215,11 @@ export const useStore = create<State>((set, get) => ({
 
   async revokeLink(id) {
     await get().backend!.revokeLink(id);
+    await get().refresh();
+  },
+
+  async saveSetting(key, value) {
+    await get().backend!.saveSetting(key, value);
     await get().refresh();
   },
 

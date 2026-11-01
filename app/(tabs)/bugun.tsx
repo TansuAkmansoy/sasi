@@ -6,7 +6,7 @@ import { useColors } from '../../src/theme';
 import { Banner, Screen, SectionTitle, EmptyState } from '../../src/components/ui';
 import { RezKart } from '../../src/components/RezKart';
 import { addDays, fmt, today, weekdayName } from '../../src/lib/tarih';
-import { awaitingCompletion, isActive, missingOf, optionDueSoon } from '../../src/lib/durum';
+import { awaitingCompletion, isActive, missingOf, optionDueSoon, optionExpired } from '../../src/lib/durum';
 import type { Reservation } from '../../src/lib/types';
 
 export default function BugunEkrani() {
@@ -20,13 +20,14 @@ export default function BugunEkrani() {
 
   const arrivals = all.filter((r) => isActive(r) && r.check_in === t);
   const departures = all.filter((r) => isActive(r) && r.check_out === t);
-  const options = all.filter((r) => optionDueSoon(r, t)).sort((a, b) => (a.option_until ?? '').localeCompare(b.option_until ?? ''));
+  const options = all.filter((r) => optionDueSoon(r, t)).sort((a, b) => (a.hold_until ?? a.option_until ?? '').localeCompare(b.hold_until ?? b.option_until ?? ''));
   const awaiting = all.filter((r) => awaitingCompletion(r, t)).sort((a, b) => a.check_out.localeCompare(b.check_out));
   const missing = all.filter((r) => !awaitingCompletion(r, t) && missingOf(r, t).length > 0);
+  const openHolds = all.filter((r) => r.status === 'option' && !optionDueSoon(r, t)).sort((a, b) => (a.hold_until ?? a.option_until ?? '').localeCompare(b.hold_until ?? b.option_until ?? ''));
   const soon = all.filter((r) => isActive(r) && r.check_in > t && r.check_in <= addDays(t, 7));
   const staying = all.filter((r) => isActive(r) && r.check_in < t && r.check_out > t);
 
-  const nothing = !arrivals.length && !departures.length && !options.length && !awaiting.length && !missing.length && !soon.length && !staying.length;
+  const nothing = !openHolds.length && !arrivals.length && !departures.length && !options.length && !awaiting.length && !missing.length && !soon.length && !staying.length;
 
   const block = (title: string, list: Reservation[], hint?: string) =>
     list.length ? (
@@ -43,15 +44,16 @@ export default function BugunEkrani() {
 
   return (
     <Screen title="Bugün" subtitle={`${weekdayName(t)}, ${fmt(t)}`} refreshing={refreshing} onRefresh={refresh}>
-      {options.some((r) => (r.option_until ?? '') <= t) ? <Banner kind="warn" icon="time-outline" text="Süresi dolan opsiyon var. Onayla, uzat ya da bırak; karar verene kadar tarihler kapalı kalır." /> : null}
-      {block('Opsiyon süresi doluyor', options)}
+      {options.some((r) => optionExpired(r, t)) ? <Banner kind="warn" icon="time-outline" text="Süresi dolan hold var. Onayla, uzat ya da bırak; karar verene kadar tarihler kapalı kalır." /> : null}
+      {block('Hold süresi doluyor', options)}
+      {block('Açık hold\'lar', openHolds)}
       {block('Bugün giriş (16:00)', arrivals)}
       {block('Bugün çıkış (10:00)', departures)}
       {block('Konaklama bitti, onayını bekliyor', awaiting, 'Son düzeltmeleri yapıp "Konaklamayı tamamla" ile arşive al.')}
       {block('Eksik işler', missing)}
       {block('Şu an konaklayanlar', staying)}
       {block('Önümüzdeki 7 gün girişleri', soon)}
-      {nothing ? <EmptyState icon="sunny-outline" title="Bugün yapılacak bir şey yok" text="Girişler, çıkışlar, opsiyonlar ve eksik işler burada görünür." /> : null}
+      {nothing ? <EmptyState icon="sunny-outline" title="Bugün yapılacak bir şey yok" text="Girişler, çıkışlar, hold'lar ve eksik işler burada görünür." /> : null}
     </Screen>
   );
 }

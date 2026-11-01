@@ -4,10 +4,12 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useStore } from '../../src/store';
 import { useColors, space } from '../../src/theme';
-import { Banner, Button, IconButton, Screen, SectionTitle, EmptyState } from '../../src/components/ui';
+import { Banner, Button, IconButton, Screen, SectionTitle, EmptyState, Segmented } from '../../src/components/ui';
 import { Cizelge } from '../../src/components/Cizelge';
+import { AyTakvim } from '../../src/components/AyTakvim';
+import { villaColor } from '../../src/theme';
 import { RezKart } from '../../src/components/RezKart';
-import { AYLAR, addMonths, daysInMonth, make, today, ym, fmt } from '../../src/lib/tarih';
+import { AYLAR, addMonths, daysInMonth, make, today, ym, fmt, weekdayName } from '../../src/lib/tarih';
 import { isActive } from '../../src/lib/durum';
 
 export default function TakvimEkrani() {
@@ -20,6 +22,8 @@ export default function TakvimEkrani() {
   const mode = useStore((s) => s.config?.mode);
   const t = today();
   const [view, setView] = useState(ym(t));
+  const [mode, setMode] = useState<'ay' | 'cizelge'>('ay');
+  const [selDay, setSelDay] = useState<string | null>(t);
 
   const villas = (data?.villas ?? []).filter((v) => v.active);
   const monthStart = make(view.y, view.m, 1);
@@ -50,6 +54,7 @@ export default function TakvimEkrani() {
       subtitle={mode === 'demo' ? 'Örnek veriler · gerçek kayıt değil' : data ? `Son güncelleme ${new Date(data.fetchedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}` : undefined}
       right={
         <>
+          <IconButton icon="calculator-outline" label="Ücret hesapla" onPress={() => router.push('/hesapla')} />
           <IconButton icon="search" label="Müsaitlik sorgula" onPress={() => router.push('/musaitlik')} />
           <IconButton icon="add-circle" color={c.primary} label="Yeni rezervasyon" onPress={() => router.push({ pathname: '/rezervasyon/[id]', params: { id: 'yeni' } })} />
         </>
@@ -78,7 +83,26 @@ export default function TakvimEkrani() {
         </Pressable>
       </View>
 
-      {villas.length ? (
+      <Segmented
+        value={mode}
+        onChange={setMode}
+        options={[
+          { value: 'ay', label: 'Ay' },
+          { value: 'cizelge', label: 'Villa çizelgesi' },
+        ]}
+      />
+
+      {villas.length && mode === 'ay' ? (
+        <AyTakvim
+          villas={villas}
+          reservations={data?.reservations ?? []}
+          year={view.y}
+          month={view.m}
+          selected={selDay}
+          onSelectDay={setSelDay}
+          onPressReservation={(r) => router.push({ pathname: '/rezervasyon/[id]', params: { id: r.id! } })}
+        />
+      ) : villas.length ? (
         <Cizelge
           villas={villas}
           reservations={data?.reservations ?? []}
@@ -92,15 +116,50 @@ export default function TakvimEkrani() {
       )}
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: space.m, gap: 14 }}>
-        <Legend color={c.primary} label="Onaylı" />
-        <Legend color={c.sun} label="Opsiyon" dashed />
-        <Legend color={c.deep} label="Tamamlandı" />
-        <Legend color={c.today} label="Bugün" soft />
+        {mode === 'ay' ? (
+          villas.map((v, i) => <Legend key={v.id} color={villaColor(c, i)} label={v.name.replace(/^Villa\s+/i, '')} />)
+        ) : (
+          <>
+            <Legend color={c.primary} label="Onaylı" />
+            <Legend color={c.deep} label="Tamamlandı" />
+          </>
+        )}
+        <Legend color={c.hold} label="Hold" dashed />
       </View>
-      <Text style={{ color: c.text3, fontSize: 12, marginTop: 6 }}>Boş bir güne dokun: o villa ve tarihle yeni rezervasyon açılır. Giriş 16:00 · Çıkış 10:00</Text>
+      <Text style={{ color: c.text3, fontSize: 12, marginTop: 6 }}>
+        {mode === 'ay' ? 'Bir güne dokun: o günün girişleri, çıkışları ve konaklayanlar aşağıda listelenir.' : 'Boş bir güne dokun: o villa ve tarihle yeni rezervasyon açılır.'} Giriş 16:00 · Çıkış 10:00
+      </Text>
 
       {view.y !== ym(t).y || view.m !== ym(t).m ? (
         <Button title={`Bugüne dön (${fmt(t, false)})`} kind="ghost" small onPress={() => setView(ym(t))} style={{ marginTop: space.s, alignSelf: 'center' }} />
+      ) : null}
+
+      {mode === 'ay' && selDay ? (
+        <>
+          <SectionTitle right={<Button title="Bu tarihten rezervasyon" icon="add" kind="ghost" small onPress={() => router.push({ pathname: '/rezervasyon/[id]', params: { id: 'yeni', giris: selDay } })} />}>
+            {weekdayName(selDay)}, {fmt(selDay)}
+          </SectionTitle>
+          {(() => {
+            const dayRes = (data?.reservations ?? []).filter((r) => isActive(r) && r.check_in <= selDay && r.check_out >= selDay);
+            const free = villas.filter((v) => !dayRes.some((r) => r.villa_id === v.id && r.check_in <= selDay && r.check_out > selDay));
+            return (
+              <>
+                {dayRes.length === 0 ? <Text style={{ color: c.text2, marginBottom: 8 }}>Bu gün için kayıt yok.</Text> : null}
+                {dayRes.map((r) => (
+                  <View key={r.id}>
+                    <Text style={{ color: c.text2, fontSize: 12, fontWeight: '700', marginBottom: 4 }}>
+                      {r.check_in === selDay ? 'GİRİŞ 16:00' : r.check_out === selDay ? 'ÇIKIŞ 10:00' : 'KONAKLIYOR'}
+                    </Text>
+                    <RezKart r={r} villas={data?.villas ?? []} agencies={data?.agencies} onPress={() => router.push({ pathname: '/rezervasyon/[id]', params: { id: r.id! } })} />
+                  </View>
+                ))}
+                <Text style={{ color: free.length ? c.ok : c.text3, fontSize: 13, fontWeight: '600', marginBottom: 4 }}>
+                  {free.length ? `Bu gece boş: ${free.map((v) => v.name.replace(/^Villa\s+/i, '')).join(', ')}` : 'Bu gece üç villa da dolu.'}
+                </Text>
+              </>
+            );
+          })()}
+        </>
       ) : null}
 
       <SectionTitle>Bu aydaki konaklamalar ({monthRes.length})</SectionTitle>

@@ -3,6 +3,7 @@ import type { HistoryEntry, MonthlyPrice, Reservation, Snapshot } from '../lib/t
 import { addDays, today, ym, addMonths } from '../lib/tarih';
 import { findConflict } from '../lib/durum';
 import { Backend, ConflictError, reservationRow } from './backend';
+import { mergeSettings } from '../lib/sablon';
 
 // Supabase kurulmadan uygulamayı denemek için telefonda saklanan örnek veri.
 const KEY = 'sasi.demo.v1';
@@ -31,17 +32,18 @@ function seed(): Snapshot {
     guest_name: '', guest_phone: null, guest_email: null, guests_count: null, currency: 'EUR', gross_minor: 0,
     manual_price: false, agency_id: null, commission_pct: null, commission_minor: null, invoice_date: null,
     registry_done: false, registry_date: null, note: null, cancel_date: null, cancel_reason: null, refund_status: null,
-    deduction_minor: null, payments: [], ...p,
+    deduction_minor: null, stay_minor: null, pet: false, pet_fee_minor: null, short_stay_fee_minor: null, hold_until: null, payments: [], ...p,
   });
   const reservations: Reservation[] = [
     base({ villa_id: 'v1', check_in: addDays(t, -9), check_out: addDays(t, -2), guest_name: 'Emma Wilson', currency: 'GBP', gross_minor: 420000, agency_id: 'a1', commission_pct: 15, registry_done: true, registry_date: addDays(t, -9), payments: [{ id: uid(), kind: 'deposit', amount_minor: 120000, currency: 'GBP', rate: null, method: 'transfer', paid_on: addDays(t, -60) }, { id: uid(), kind: 'balance', amount_minor: 300000, currency: 'GBP', rate: null, method: 'cash', paid_on: addDays(t, -9) }] }),
     base({ villa_id: 'v1', check_in: addDays(t, -2), check_out: addDays(t, 5), guest_name: 'Mehmet Yılmaz', guest_phone: '+90 532 000 00 00', guests_count: 6, gross_minor: 350000, registry_done: true, registry_date: addDays(t, -2), payments: [{ id: uid(), kind: 'deposit', amount_minor: 100000, currency: 'EUR', rate: null, method: 'transfer', paid_on: addDays(t, -40) }] }),
     base({ villa_id: 'v2', check_in: t, check_out: addDays(t, 10), guest_name: 'James Brown', guests_count: 4, gross_minor: 600000, agency_id: 'a2', commission_pct: 20, payments: [{ id: uid(), kind: 'deposit', amount_minor: 200000, currency: 'EUR', rate: null, method: 'agency', paid_on: addDays(t, -30) }] }),
-    base({ villa_id: 'v3', status: 'option', option_until: addDays(t, 1), check_in: addDays(t, 12), check_out: addDays(t, 19), guest_name: 'Sophie Taylor', currency: 'GBP', gross_minor: 304000 }),
+    base({ villa_id: 'v3', status: 'option', option_until: addDays(t, 1), hold_until: new Date(Date.now() + 20 * 3600_000).toISOString(), check_in: addDays(t, 12), check_out: addDays(t, 19), guest_name: 'Sophie Taylor', currency: 'GBP', gross_minor: 304000 }),
     base({ villa_id: 'v1', check_in: addDays(t, 5), check_out: addDays(t, 13), guest_name: 'Ayşe Demir', gross_minor: 457100 }),
     base({ villa_id: 'v2', status: 'cancelled', check_in: addDays(t, 20), check_out: addDays(t, 27), guest_name: 'Oliver Smith', gross_minor: 420000, cancel_date: addDays(t, -3), cancel_reason: 'Uçuş iptali', refund_status: 'pending', deduction_minor: 50000, payments: [{ id: uid(), kind: 'deposit', amount_minor: 100000, currency: 'EUR', rate: null, method: 'transfer', paid_on: addDays(t, -50) }] }),
   ];
   return {
+    settings: mergeSettings({ fees: { pet_fee_minor: 7500, short_stay_fee_minor: 15000 } }),
     villas,
     prices,
     agencies: [
@@ -56,7 +58,11 @@ function seed(): Snapshot {
 
 async function read(): Promise<Snapshot> {
   const raw = await AsyncStorage.getItem(KEY);
-  if (raw) return JSON.parse(raw) as Snapshot;
+  if (raw) {
+    const s = JSON.parse(raw) as Snapshot;
+    s.settings = mergeSettings(s.settings);
+    return s;
+  }
   const s = seed();
   await AsyncStorage.setItem(KEY, JSON.stringify(s));
   return s;
@@ -137,6 +143,11 @@ export function demoBackend(): Backend {
     },
     async history(reservationId) {
       return history.get(reservationId) ?? [];
+    },
+    async saveSetting(key, value) {
+      const s = await read();
+      s.settings = mergeSettings({ ...s.settings, [key]: value } as any);
+      await write(s);
     },
     async signOut() {
       await AsyncStorage.removeItem(KEY);

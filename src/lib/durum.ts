@@ -68,12 +68,18 @@ export function awaitingCompletion(r: Reservation, todayIso: string): boolean {
   return r.status === 'confirmed' && r.check_out <= todayIso;
 }
 
-export function optionExpired(r: Reservation, todayIso: string): boolean {
-  return r.status === 'option' && !!r.option_until && r.option_until <= todayIso;
+/** Hold süresi doldu mu? Saatli hold varsa ana göre, yoksa güne göre. */
+export function optionExpired(r: Pick<Reservation, 'status' | 'option_until' | 'hold_until'>, todayIso: string, nowMs: number = Date.now()): boolean {
+  if (r.status !== 'option') return false;
+  if (r.hold_until) return Date.parse(r.hold_until) <= nowMs;
+  return !!r.option_until && r.option_until <= todayIso;
 }
 
-export function optionDueSoon(r: Reservation, todayIso: string): boolean {
-  return r.status === 'option' && !!r.option_until && r.option_until <= addDays(todayIso, 1);
+/** Hold yakında bitiyor mu? (saatli: 12 saat içinde; günlük: yarın veya önce) */
+export function optionDueSoon(r: Pick<Reservation, 'status' | 'option_until' | 'hold_until'>, todayIso: string, nowMs: number = Date.now()): boolean {
+  if (r.status !== 'option') return false;
+  if (r.hold_until) return Date.parse(r.hold_until) <= nowMs + 12 * 3600_000;
+  return !!r.option_until && r.option_until <= addDays(todayIso, 1);
 }
 
 export type Missing = 'invoice' | 'registry' | 'payment';
