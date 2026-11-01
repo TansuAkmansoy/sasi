@@ -158,7 +158,7 @@ export const useStore = create<State>((set, get) => ({
     try {
       const data = await b.loadAll();
       set({ data, offline: false, error: null });
-      if (b.kind === 'supabase') {
+      {
         setFxRemote({
           save: (k, r) => {
             b.saveSetting(k, r).catch(() => {});

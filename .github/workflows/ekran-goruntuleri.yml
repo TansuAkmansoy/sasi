@@ -1,0 +1,45 @@
+# Kullanma kılavuzu için web sürümünden ekran görüntüleri alır ve
+# "ekran-goruntuleri" dalına koyar. Elle çalıştırılır.
+name: Ekran görüntüleri
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Web derlemesi
+        run: |
+          npm install
+          npx expo install --fix
+          npx expo export --platform web --output-dir dist
+          node scripts/web-pwa.js dist
+          mkdir -p site/app
+          cp -r docs/. site/
+          cp -r dist/. site/app/
+          cp site/app/index.html site/404.html
+
+      - name: Ekran görüntüleri
+        run: |
+          npm install --no-save playwright@1 >/dev/null 2>&1
+          npx playwright install --with-deps chromium >/dev/null 2>&1
+          sudo apt-get install -y fonts-noto-color-emoji >/dev/null 2>&1 || true
+          node scripts/ekran-goruntusu.js site shots
+
+      - name: Dala gönder
+        run: |
+          cd shots
+          git init -q -b ekran-goruntuleri
+          git add -A
+          git -c user.name="sasi-bot" -c user.email="sasi-bot@users.noreply.github.com" commit -qm "Ekran görüntüleri"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ekran-goruntuleri

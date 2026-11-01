@@ -150,7 +150,9 @@ export function demoBackend(): Backend {
       s.settings = mergeSettings({ ...s.settings, [key]: value } as any);
       await write(s);
     },
-    async getSetting() {
+    async getSetting(key) {
+      // Örnek modda (web) kur gösterimi için sabit örnek kur
+      if (key.startsWith('fx:')) return { date: today(), TRY: 1, USD: 42.0, EUR: 48.7, GBP: 55.4 };
       return null;
     },
     async signOut() {
