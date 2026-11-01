@@ -1,6 +1,6 @@
 # Sasi — Güncelleme notları
 
-Durum: 1.1 uygulandı. **1.2 bekliyor** — "uygula" denmeden koda dokunulmaz.
+Durum: **1.2 uygulandı** (1 Kasım 2026). Yeni istekler aşağıya eklenir; "uygula" denmeden koda dokunulmaz.
 
 ## Sürüm 1.1 için istenenler (1 Kasım 2026)
 
@@ -115,3 +115,12 @@ Durum: 1.1 uygulandı. **1.2 bekliyor** — "uygula" denmeden koda dokunulmaz.
 3. Rezervasyon yapıldığı günün kuru rezervasyona kaydedilsin mi (sonradan "o gün kaç TL ediyordu" görebilmek için)?
 4. Uygulama ikonunda yalnızca ev simgesi mi kullanılsın? Küçük boyutta "sasi" yazısı okunmaz; yazı giriş ekranında kalır.
 5. Uygulamanın renkleri logodaki yeşil-mavi geçişe göre güncellensin mi?
+
+## 1.2'de yapılanlar
+- Tarih seçici her ay 6 satır yer ayırır; oklar yerinden oynamaz.
+- Ay adına dokununca ay/yıl tekerleği açılır (tarih seçicide ve Takvim sekmesinde).
+- Yeni logo: ikon (yalnızca ev simgesi, beyaz zemin), açılış ekranı ve giriş ekranı (logo + yazı). Bildirim ve tema ikonları ev silüeti.
+- Renkler logodaki yeşil-mavi tonlara göre güncellendi (uygulama ve paylaşım sayfası).
+- TCMB günlük kurları (döviz satış): toplam tutarın diğer para birimlerindeki karşılığı hem ücret hesaplama hem rezervasyon ekranında. Rezervasyon ekranında ayrıca rezervasyon günü kuruyla karşılık. Yabancı para ödemede "TCMB kurunu kullan" düğmesi. Kurlar önbellekte tutulur; bağlantı yoksa son bilinen kur gösterilir.
+- Önerilen (fiyat listesi) ve anlaşılan ücret ayrı: anlaşılan ücret kayıtta kalır, önerilen ücret ve fark (tutar ve %) gösterilir.
+- Veritabanı: `supabase/guncelleme-1.2.sql` (tek satır, bir kez çalıştırılır).

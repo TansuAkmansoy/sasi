@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors, radius, space } from '../theme';
 import { AYLAR, GUNLER_KISA, addMonths, daysInMonth, make, today, weekdayMon, ym, fmtRange, fmt, nights, addDays } from '../lib/tarih';
 import { Button } from './ui';
+import { AyYilTekerlek } from './AyYilSecici';
 
 type Props =
   | {
@@ -35,11 +36,14 @@ export function TakvimSecici(props: Props) {
   const [start, setStart] = useState<string | null>(null);
   const [end, setEnd] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [wheel, setWheel] = useState(false);
+  const [gridH, setGridH] = useState<number | null>(null);
   const busy = props.mode === 'range' ? props.busy ?? new Set<string>() : new Set<string>();
 
   useEffect(() => {
     if (!props.visible) return;
     setMsg(null);
+    setWheel(false);
     if (props.mode === 'range') {
       setStart(props.start ?? null);
       setEnd(props.end ?? null);
@@ -57,7 +61,8 @@ export function TakvimSecici(props: Props) {
     const n = daysInMonth(view.y, view.m);
     const arr: (string | null)[] = Array(lead).fill(null);
     for (let d = 1; d <= n; d++) arr.push(make(view.y, view.m, d));
-    while (arr.length % 7) arr.push(null);
+    // Her ay 6 satır: pencere yüksekliği ve oklar ay değişince kaymaz
+    while (arr.length < 42) arr.push(null);
     return arr;
   }, [view]);
 
@@ -111,14 +116,23 @@ export function TakvimSecici(props: Props) {
             <Pressable onPress={() => setView(addMonths(view.y, view.m, -1))} hitSlop={10} style={st.nav} accessibilityLabel="Önceki ay">
               <Ionicons name="chevron-back" size={24} color={c.text} />
             </Pressable>
-            <Text style={{ color: c.text, fontSize: 16, fontWeight: '700' }}>
-              {AYLAR[view.m - 1]} {view.y}
-            </Text>
+            <Pressable onPress={() => setWheel(!wheel)} hitSlop={8} style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, backgroundColor: wheel ? c.primarySoft : 'transparent' }} accessibilityLabel="Ay ve yıl seç">
+              <Text style={{ color: c.text, fontSize: 16, fontWeight: '700' }}>
+                {AYLAR[view.m - 1]} {view.y}
+              </Text>
+              <Ionicons name={wheel ? 'chevron-up' : 'chevron-down'} size={16} color={c.text2} style={{ marginLeft: 4 }} />
+            </Pressable>
             <Pressable onPress={() => setView(addMonths(view.y, view.m, 1))} hitSlop={10} style={st.nav} accessibilityLabel="Sonraki ay">
               <Ionicons name="chevron-forward" size={24} color={c.text} />
             </Pressable>
           </View>
-          <View style={st.grid}>
+          {wheel ? (
+            <View style={{ height: gridH ?? 300, justifyContent: 'center' }}>
+              <AyYilTekerlek y={view.y} m={view.m} onChange={(y, m) => setView({ y, m })} />
+              <Button title="Günleri göster" kind="secondary" small style={{ marginTop: 12 }} onPress={() => setWheel(false)} />
+            </View>
+          ) : (
+          <View style={st.grid} onLayout={(e) => setGridH(e.nativeEvent.layout.height)}>
             {GUNLER_KISA.map((g) => (
               <Text key={g} style={[st.wd, { color: c.text3 }]}>
                 {g}
@@ -158,6 +172,7 @@ export function TakvimSecici(props: Props) {
               );
             })}
           </View>
+          )}
           {props.mode === 'range' && busy.size ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
               <View style={{ width: 14, height: 14, borderRadius: 4, backgroundColor: c.dangerSoft, marginRight: 6 }} />

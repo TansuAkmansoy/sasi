@@ -49,6 +49,7 @@ function mapReservation(row: any): Reservation {
     commission_minor: num(row.commission_minor),
     deduction_minor: num(row.deduction_minor),
     stay_minor: num(row.stay_minor),
+    suggested_minor: num(row.suggested_minor),
     pet: !!row.pet,
     pet_fee_minor: num(row.pet_fee_minor),
     short_stay_fee_minor: num(row.short_stay_fee_minor),

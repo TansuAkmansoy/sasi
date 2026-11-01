@@ -352,3 +352,6 @@ end $$;
 
 revoke all on function save_reservation(jsonb, jsonb) from public, anon;
 grant execute on function save_reservation(jsonb, jsonb) to authenticated;
+
+-- Sürüm 1.2: fiyat listesinden önerilen konaklama ücreti
+alter table reservations add column if not exists suggested_minor bigint;

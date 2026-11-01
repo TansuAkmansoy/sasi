@@ -32,7 +32,7 @@ function seed(): Snapshot {
     guest_name: '', guest_phone: null, guest_email: null, guests_count: null, currency: 'EUR', gross_minor: 0,
     manual_price: false, agency_id: null, commission_pct: null, commission_minor: null, invoice_date: null,
     registry_done: false, registry_date: null, note: null, cancel_date: null, cancel_reason: null, refund_status: null,
-    deduction_minor: null, stay_minor: null, pet: false, pet_fee_minor: null, short_stay_fee_minor: null, hold_until: null, payments: [], ...p,
+    deduction_minor: null, stay_minor: null, suggested_minor: null, pet: false, pet_fee_minor: null, short_stay_fee_minor: null, hold_until: null, payments: [], ...p,
   });
   const reservations: Reservation[] = [
     base({ villa_id: 'v1', check_in: addDays(t, -9), check_out: addDays(t, -2), guest_name: 'Emma Wilson', currency: 'GBP', gross_minor: 420000, agency_id: 'a1', commission_pct: 15, registry_done: true, registry_date: addDays(t, -9), payments: [{ id: uid(), kind: 'deposit', amount_minor: 120000, currency: 'GBP', rate: null, method: 'transfer', paid_on: addDays(t, -60) }, { id: uid(), kind: 'balance', amount_minor: 300000, currency: 'GBP', rate: null, method: 'cash', paid_on: addDays(t, -9) }] }),

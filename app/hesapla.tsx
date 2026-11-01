@@ -12,6 +12,7 @@ import { addDays, fmt, fmtRange, nights, today } from '../src/lib/tarih';
 import { cancelDeadline, grossOf, isShortStay, paymentPlan } from '../src/lib/ucret';
 import { fmtLong, DEFAULT_FEES } from '../src/lib/sablon';
 import { STATUS_LABEL } from '../src/lib/types';
+import { KurKarsiligi } from '../src/components/KurKarsiligi';
 
 type DepositBy = 'none' | 'agency' | 'us';
 const DUE_OPTIONS = [
@@ -111,12 +112,12 @@ export default function HesaplaEkrani() {
             ))}
             {price?.missingMonths.length ? <Text style={{ color: c.terra, fontSize: 13 }}>{price.missingMonths.join(', ')} fiyatı girilmemiş; konaklama ücretini elle yaz.</Text> : null}
             <Field
-              label="Konaklama ücreti"
+              label="Anlaşılan konaklama ücreti"
               value={stayText}
               onChangeText={(v) => { setStayText(v); setStayManual(true); }}
               keyboardType="decimal-pad"
               suffix={SYMBOL[cur]}
-              hint={stayManual ? 'Elle girildi' : 'Aylık fiyatlardan hesaplandı'}
+              hint={stayManual && price?.ok ? `Önerilen (fiyat listesi): ${money(price.total_minor, cur)}` : 'Fiyat listesinden; anlaşılan farklıysa üzerine yaz.'}
               containerStyle={{ marginTop: 8 }}
             />
             <Toggle label="Evcil hayvan" hint="Tek seferlik ücret" value={pet} onChange={setPet} />
@@ -126,6 +127,7 @@ export default function HesaplaEkrani() {
             ) : null}
             <Divider />
             <Row label="Toplam (brüt)" value={money(gross, cur)} strong />
+            <KurKarsiligi amount={gross} currency={cur} label="Bugünkü kurla" />
           </Card>
 
           <SectionTitle>Kanal</SectionTitle>
@@ -211,6 +213,7 @@ export default function HesaplaEkrani() {
                     giris: range.a,
                     cikis: range.b,
                     konaklama: String(stay),
+                    onerilen: price?.ok ? String(price.total_minor) : '',
                     elle: stayManual ? '1' : '0',
                     evcil: pet ? String(petFee ?? '') : '',
                     kisa: shortFee != null ? String(shortFee) : '',

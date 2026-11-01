@@ -21,6 +21,9 @@ Kalkan/Kaş'taki villaların (Villa Poyraz, Villa Seascape, Villa Shipahoy) reze
 ### 1b. Sürüm 1.1 güncellemesi
 Daha önce kurulum yaptıysan SQL Editor'de `supabase/guncelleme-1.1.sql` dosyasını bir kez çalıştır. (Yeni kurulumda `kurulum.sql` bunu içerir.)
 
+### 1c. Sürüm 1.2 güncellemesi
+SQL Editor'de `supabase/guncelleme-1.2.sql` dosyasını bir kez çalıştır.
+
 ### 2. Paylaşım sayfası (GitHub Pages)
 Repo → **Settings → Pages** → *Source*: **Deploy from a branch** → Branch: **main**, klasör: **/docs** → **Save**.
 Birkaç dakika sonra sayfa `https://tansuakmansoy.github.io/sasi/` adresinde açılır.

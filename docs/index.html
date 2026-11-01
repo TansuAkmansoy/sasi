@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#F3E3C7">
+<meta name="theme-color" content="#F5FAF9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Sasi">
 <link rel="icon" href="favicon.png">
@@ -13,21 +13,21 @@
 <title>Sasi</title>
 <style>
   :root {
-    --bg: #FBF7F0; --surface: #fff; --surface2: #F3E3C7; --border: #E6DCCB;
-    --text: #1F2A30; --text2: #5B6870; --text3: #8A959B;
-    --primary: #0F8C93; --primarySoft: #D7F1F2; --deep: #0A5E6B;
+    --bg: #F5FAF9; --surface: #fff; --surface2: #E4F2EF; --border: #D6E6E2;
+    --text: #16302F; --text2: #4E6866; --text3: #86A09D;
+    --primary: #138A7A; --primarySoft: #D9F3EC; --deep: #0D5C73;
     --sun: #F6C56F; --sunSoft: #FDF0D5; --terra: #C9612F; --terraSoft: #FBE4D8;
-    --danger: #C53B3B; --dangerSoft: #FBE1E1; --ok: #2E8B57; --okSoft: #DDF2E5; --weekend: #F7F1E6;
+    --danger: #C53B3B; --dangerSoft: #FBE1E1; --ok: #2E8B57; --okSoft: #DDF2E5; --weekend: #EEF6F4;
     --hold: #E08E00; --holdBg: #FFE6B0; --holdText: #5A3B00;
-    --busy: #0F8C93; --free: #fff;
+    --busy: #138A7A; --free: #fff;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0E171B; --surface: #162227; --surface2: #22323A; --border: #2A3B43;
-      --text: #ECF2F3; --text2: #A9B8BE; --text3: #7A8A91;
-      --primary: #2CC2C9; --primarySoft: #123E43; --deep: #7FD9DD;
+      --bg: #0C1718; --surface: #132324; --surface2: #1C3333; --border: #28403F;
+      --text: #E8F4F2; --text2: #A6BFBC; --text3: #738B88;
+      --primary: #4FD1B5; --primarySoft: #123B36; --deep: #8ED7F2;
       --sunSoft: #3D3220; --terraSoft: #3E2519; --terra: #F08E5F; --dangerSoft: #3D1E1E; --danger: #F07373;
-      --okSoft: #183325; --ok: #5BC98A; --weekend: #1A282E; --busy: #2CC2C9; --free: #162227;
+      --okSoft: #183325; --ok: #5BC98A; --weekend: #152A2A; --busy: #4FD1B5; --free: #132324;
       --hold: #F5B33D; --holdBg: #4A3510; --holdText: #FFE2A8;
     }
   }
@@ -35,7 +35,7 @@
   html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-text-size-adjust: 100%; }
   .wrap { max-width: 760px; margin: 0 auto; padding: 16px 16px calc(40px + env(safe-area-inset-bottom)); }
   header.top { display: flex; align-items: center; gap: 12px; padding: calc(8px + env(safe-area-inset-top)) 0 12px; }
-  header.top img { width: 44px; height: 44px; border-radius: 11px; }
+  header.top img { width: 44px; height: 44px; border-radius: 11px; background: #fff; }
   header.top h1 { font-size: 20px; margin: 0; line-height: 1.2; }
   header.top .sub { color: var(--text2); font-size: 13px; }
   header.top .sp { flex: 1; }
@@ -366,6 +366,7 @@ function card(r, vName, today) {
       <h4>Ücret</h4>
       ${(() => { const pf = r.pet ? Number(r.pet_fee_minor || 0) : 0, sf = Number(r.short_stay_fee_minor || 0); const stay = r.stay_minor != null ? Number(r.stay_minor) : Number(r.gross_minor) - pf - sf; return (pf || sf) ? `<div class="row"><span>Konaklama</span><b>${money(stay, r.currency)}</b></div>${pf ? `<div class="row"><span>Evcil hayvan (tek sefer)</span><b>${money(pf, r.currency)}</b></div>` : ''}${sf ? `<div class="row"><span>Kısa konaklama</span><b>${money(sf, r.currency)}</b></div>` : ''}` : ''; })()}
       <div class="row"><span>Brüt</span><b>${money(r.gross_minor, r.currency)}</b></div>
+      ${r.suggested_minor != null && r.stay_minor != null && Number(r.suggested_minor) !== Number(r.stay_minor) ? `<div class="row"><span>Önerilen (fiyat listesi)</span><b class="muted">${money(r.suggested_minor, r.currency)}</b></div>` : ''}
       ${r.agency_id ? `<div class="row"><span>Komisyon${r.commission_pct != null ? ' (%' + String(r.commission_pct).replace('.', ',') + ')' : ''}</span><b>${money(m.commission, r.currency)}</b></div><div class="row"><span>Net</span><b>${money(m.netIncome, r.currency)}</b></div>` : '<div class="row"><span>Kanal</span><b>Direkt</b></div>'}
       <div class="row"><span>Alınan</span><b>${money(m.net, r.currency)}</b></div>
       ${m.remaining ? `<div class="row"><span>Kalan</span><b style="color:var(--terra)">${money(m.remaining, r.currency)}</b></div>` : ''}

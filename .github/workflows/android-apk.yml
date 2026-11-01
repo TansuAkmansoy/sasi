@@ -56,8 +56,8 @@ jobs:
       - name: Sürüm olarak yayınla
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.1.${{ github.run_number }}
-          name: Sasi 1.1.${{ github.run_number }}
+          tag_name: v1.2.${{ github.run_number }}
+          name: Sasi 1.2.${{ github.run_number }}
           body: |
             Telefonda bu sayfayı aç, **sasi.apk** dosyasını indir ve kur (eski sürümün üzerine kurulur, kayıtlar silinmez).
             Yenilikler: GUNCELLEME_NOTLARI.md

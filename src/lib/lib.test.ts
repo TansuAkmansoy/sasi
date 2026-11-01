@@ -76,7 +76,7 @@ function res(p: Partial<Reservation>): Reservation {
     guest_name: 'X', guest_phone: null, guest_email: null, guests_count: null, currency: 'EUR', gross_minor: 700000,
     manual_price: false, agency_id: null, commission_pct: null, commission_minor: null, invoice_date: null,
     registry_done: false, registry_date: null, note: null, cancel_date: null, cancel_reason: null, refund_status: null,
-    deduction_minor: null, stay_minor: null, pet: false, pet_fee_minor: null, short_stay_fee_minor: null, hold_until: null, payments: [], ...p,
+    deduction_minor: null, stay_minor: null, suggested_minor: null, pet: false, pet_fee_minor: null, short_stay_fee_minor: null, hold_until: null, payments: [], ...p,
   };
 }
 
@@ -183,4 +183,56 @@ test('mesaj şablonu', () => {
   assert.doesNotMatch(msg, /\{[a-z_]+\}/);
   const hold = buildMessage('hold', { ...r, status: 'option', hold_until: '2026-06-02T11:00:00.000Z' }, undefined, undefined, s);
   assert.doesNotMatch(hold, /\{[a-z_]+\}/);
+});
+
+// ---------------- v1.2: TCMB kurları ----------------
+import { parseTcmb, convert, crossRate, tcmbUrl } from './kur.ts';
+
+const TCMB_XML = `<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="isokur.xsl"?>
+<Tarih_Date Tarih="30.10.2026" Date="10/30/2026"  Bulten_No="2026/206" >
+	<Currency CrossOrder="0" Kod="USD" CurrencyCode="USD">
+			<Unit>1</Unit>
+			<Isim>ABD DOLARI</Isim>
+			<CurrencyName>US DOLLAR</CurrencyName>
+			<ForexBuying>41.8721</ForexBuying>
+			<ForexSelling>41.9476</ForexSelling>
+			<BanknoteBuying>41.8428</BanknoteBuying>
+			<BanknoteSelling>42.0105</BanknoteSelling>
+			<CrossRateUSD/>
+			<CrossRateOther/>
+	</Currency>
+	<Currency CrossOrder="1" Kod="AUD" CurrencyCode="AUD">
+			<Unit>1</Unit>
+			<ForexSelling>27.5</ForexSelling>
+	</Currency>
+	<Currency CrossOrder="9" Kod="EUR" CurrencyCode="EUR">
+			<Unit>1</Unit>
+			<Isim>EURO</Isim>
+			<ForexBuying>48.6</ForexBuying>
+			<ForexSelling>48.7</ForexSelling>
+	</Currency>
+	<Currency CrossOrder="10" Kod="GBP" CurrencyCode="GBP">
+			<Unit>1</Unit>
+			<ForexSelling>55.4</ForexSelling>
+	</Currency>
+	<Currency CrossOrder="11" Kod="JPY" CurrencyCode="JPY">
+			<Unit>100</Unit>
+			<ForexSelling>27.30</ForexSelling>
+	</Currency>
+</Tarih_Date>`;
+
+test('TCMB bülteni okunur ve kur çevrilir', () => {
+  const r = parseTcmb(TCMB_XML)!;
+  assert.equal(r.date, '2026-10-30');
+  assert.equal(r.USD, 41.9476);
+  assert.equal(r.EUR, 48.7);
+  assert.equal(r.GBP, 55.4);
+  assert.equal(convert(100000, 'EUR', 'TRY', r), 4870000); // 1.000 € = 48.700 ₺
+  assert.equal(convert(4870000, 'TRY', 'EUR', r), 100000);
+  assert.equal(convert(100000, 'EUR', 'EUR', r), 100000);
+  assert.equal(Math.round(crossRate('GBP', 'EUR', r) * 10000) / 10000, 1.1376);
+  assert.equal(parseTcmb('<html>hata</html>'), null);
+  assert.equal(tcmbUrl('2026-10-30'), 'https://www.tcmb.gov.tr/kurlar/202610/30102026.xml');
+  assert.equal(tcmbUrl(), 'https://www.tcmb.gov.tr/kurlar/today.xml');
 });

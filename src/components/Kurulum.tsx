@@ -37,8 +37,7 @@ export function Kurulum() {
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: c.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={{ padding: space.xl, paddingTop: insets.top + space.xl * 2 }} keyboardShouldPersistTaps="handled">
         <View style={{ alignItems: 'center', marginBottom: space.xl }}>
-          <Image source={require('../../assets/icon.png')} style={{ width: 96, height: 96, borderRadius: 22 }} />
-          <Text style={{ color: c.text, fontSize: 30, fontWeight: '800', marginTop: space.m }}>Sasi</Text>
+          <Image source={require('../../assets/logo-full.png')} style={{ width: 150, height: 191 }} resizeMode="contain" accessibilityLabel="Sasi" />
           <Muted style={{ textAlign: 'center', marginTop: 4 }}>Villa rezervasyonları, tek takvimde.</Muted>
         </View>
 

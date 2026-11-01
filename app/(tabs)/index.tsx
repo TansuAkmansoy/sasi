@@ -7,6 +7,7 @@ import { useColors, space } from '../../src/theme';
 import { Banner, Button, IconButton, Screen, SectionTitle, EmptyState, Segmented } from '../../src/components/ui';
 import { Cizelge } from '../../src/components/Cizelge';
 import { AyTakvim } from '../../src/components/AyTakvim';
+import { AyYilSecici } from '../../src/components/AyYilSecici';
 import { villaColor } from '../../src/theme';
 import { RezKart } from '../../src/components/RezKart';
 import { AYLAR, addMonths, daysInMonth, make, today, ym, fmt, weekdayName } from '../../src/lib/tarih';
@@ -24,6 +25,7 @@ export default function TakvimEkrani() {
   const [view, setView] = useState(ym(t));
   const [gorunum, setGorunum] = useState<'ay' | 'cizelge'>('ay');
   const [selDay, setSelDay] = useState<string | null>(t);
+  const [ymOpen, setYmOpen] = useState(false);
 
   const villas = (data?.villas ?? []).filter((v) => v.active);
   const monthStart = make(view.y, view.m, 1);
@@ -72,12 +74,15 @@ export default function TakvimEkrani() {
         <Pressable onPress={() => setView(addMonths(view.y, view.m, -1))} hitSlop={10} style={{ padding: 8 }} accessibilityLabel="Önceki ay">
           <Ionicons name="chevron-back" size={26} color={c.text} />
         </Pressable>
-        <View style={{ alignItems: 'center' }}>
-          <Text style={{ color: c.text, fontSize: 19, fontWeight: '800' }}>
-            {AYLAR[view.m - 1]} {view.y}
-          </Text>
+        <Pressable onPress={() => setYmOpen(true)} style={{ alignItems: 'center' }} accessibilityLabel="Ay ve yıl seç" hitSlop={8}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={{ color: c.text, fontSize: 19, fontWeight: '800' }}>
+              {AYLAR[view.m - 1]} {view.y}
+            </Text>
+            <Ionicons name="chevron-down" size={18} color={c.text2} style={{ marginLeft: 4 }} />
+          </View>
           <Text style={{ color: c.text2, fontSize: 13 }}>Doluluk %{occ}</Text>
-        </View>
+        </Pressable>
         <Pressable onPress={() => setView(addMonths(view.y, view.m, 1))} hitSlop={10} style={{ padding: 8 }} accessibilityLabel="Sonraki ay">
           <Ionicons name="chevron-forward" size={26} color={c.text} />
         </Pressable>
@@ -170,6 +175,17 @@ export default function TakvimEkrani() {
           <RezKart key={r.id} r={r} villas={data?.villas ?? []} agencies={data?.agencies} onPress={() => router.push({ pathname: '/rezervasyon/[id]', params: { id: r.id! } })} />
         ))
       )}
+      <AyYilSecici
+        visible={ymOpen}
+        y={view.y}
+        m={view.m}
+        onCancel={() => setYmOpen(false)}
+        onConfirm={(y, m) => {
+          setView({ y, m });
+          setSelDay(make(y, m, 1));
+          setYmOpen(false);
+        }}
+      />
     </Screen>
   );
 }

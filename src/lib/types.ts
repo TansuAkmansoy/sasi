@@ -60,6 +60,8 @@ export interface Reservation {
   gross_minor: number;
   /** konaklama ücreti (gece ücretlerinin toplamı); null ise eski kayıt: brüt − ekstralar */
   stay_minor: number | null;
+  /** fiyat listesinden hesaplanan (önerilen) konaklama ücreti; anlaşılan ücret stay_minor'dır */
+  suggested_minor: number | null;
   pet: boolean;
   pet_fee_minor: number | null;
   short_stay_fee_minor: number | null;

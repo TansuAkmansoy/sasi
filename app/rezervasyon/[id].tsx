@@ -33,6 +33,9 @@ import { awaitingCompletion, busyNights, commissionOf, findConflict, missingOf, 
 import { ConflictError } from '../../src/data/backend';
 import { grossOf, holdUntilFromNow, isShortStay, localDateOf, localTimeOf, stayOf } from '../../src/lib/ucret';
 import { googleCalendarUrl } from '../../src/lib/gtakvim';
+import { KurKarsiligi } from '../../src/components/KurKarsiligi';
+import { getRates } from '../../src/data/kur';
+import { crossRate } from '../../src/lib/kur';
 
 type Form = Omit<Reservation, 'payments'>;
 
@@ -46,6 +49,7 @@ function emptyForm(villaId: string, currency: Currency, checkIn: string, checkOu
     option_until: localDateOf(hold),
     hold_until: hold,
     stay_minor: null,
+    suggested_minor: null,
     pet: false,
     pet_fee_minor: null,
     short_stay_fee_minor: null,
@@ -72,7 +76,7 @@ function emptyForm(villaId: string, currency: Currency, checkIn: string, checkOu
 
 const FIELD_LABEL: Record<string, string> = {
   villa_id: 'Villa', status: 'Durum', check_in: 'Giriş', check_out: 'Çıkış', option_until: 'Hold bitiş günü', hold_until: 'Hold bitişi',
-  stay_minor: 'Konaklama ücreti', pet: 'Evcil hayvan', pet_fee_minor: 'Evcil hayvan ücreti', short_stay_fee_minor: 'Kısa konaklama ücreti', guest_name: 'Misafir',
+  stay_minor: 'Anlaşılan konaklama ücreti', suggested_minor: 'Önerilen ücret', pet: 'Evcil hayvan', pet_fee_minor: 'Evcil hayvan ücreti', short_stay_fee_minor: 'Kısa konaklama ücreti', guest_name: 'Misafir',
   guest_phone: 'Telefon', guest_email: 'E-posta', guests_count: 'Kişi sayısı', currency: 'Para birimi', gross_minor: 'Brüt ücret',
   manual_price: 'Elle fiyat', agency_id: 'Acente', commission_pct: 'Komisyon %', commission_minor: 'Komisyon tutarı',
   invoice_date: 'Fatura tarihi', registry_done: 'Konaklama defteri', registry_date: 'Defter tarihi', note: 'Not',
@@ -84,7 +88,7 @@ export default function RezervasyonEkrani() {
   const params = useLocalSearchParams<{
     id: string; villa?: string; giris?: string; cikis?: string;
     // Ücret hesaplama ekranından gelenler
-    konaklama?: string; elle?: string; evcil?: string; kisa?: string; acente?: string; komisyon?: string; paraBirimi?: string;
+    konaklama?: string; onerilen?: string; elle?: string; evcil?: string; kisa?: string; acente?: string; komisyon?: string; paraBirimi?: string;
   }>();
   const isNew = params.id === 'yeni';
   const data = useStore((s) => s.data);
@@ -108,6 +112,7 @@ export default function RezervasyonEkrani() {
     if (params.konaklama) {
       const num = (x?: string) => (x ? Number(x) : null);
       f.stay_minor = num(params.konaklama);
+      f.suggested_minor = num(params.onerilen);
       f.manual_price = params.elle === '1';
       f.pet = !!params.evcil;
       f.pet_fee_minor = num(params.evcil);
@@ -245,6 +250,8 @@ export default function RezervasyonEkrani() {
 
   async function save(override?: Partial<Form>, after?: 'back' | 'stay'): Promise<boolean> {
     const f: Form = { ...form, ...override, guest_name: form.guest_name.trim() };
+    // Önerilen ücret: fiyat listesinden o an hesaplanan. Tarih/villa değişmediyse eski değer korunur.
+    if ((isNew || priceTouched) && priceUsable) f.suggested_minor = price.total_minor;
     if (!f.agency_id) {
       f.commission_pct = null;
       f.commission_minor = null;
@@ -499,7 +506,7 @@ export default function RezervasyonEkrani() {
           <Muted style={{ marginBottom: 8 }}>Tarih seçince fiyat haftalık ücretlerden otomatik hesaplanır.</Muted>
         )}
         <Field
-          label={`Konaklama ücreti${nightsN ? ` (${nightsN} gece)` : ''}`}
+          label={`Anlaşılan konaklama ücreti${nightsN ? ` (${nightsN} gece)` : ''}`}
           value={grossText}
           onChangeText={(v) => {
             setGrossText(v);
@@ -508,7 +515,7 @@ export default function RezervasyonEkrani() {
           }}
           keyboardType="decimal-pad"
           suffix={SYMBOL[form.currency]}
-          hint={form.manual_price ? 'Elle girildi' : priceUsable ? 'Otomatik hesaplandı' : undefined}
+          hint={form.manual_price ? 'Müşteriyle anlaşılan ücret; fiyat listesi değişse de bu kayıtta kalır.' : priceUsable ? 'Fiyat listesinden; anlaşılan farklıysa üzerine yaz.' : undefined}
           containerStyle={{ marginBottom: 4 }}
         />
         {form.manual_price && priceUsable && form.stay_minor !== price.total_minor ? (
@@ -558,6 +565,25 @@ export default function RezervasyonEkrani() {
         ) : null}
         <Divider />
         <Row label="Toplam (brüt)" value={money(form.gross_minor, form.currency)} strong />
+        {(() => {
+          const sug = (isNew || priceTouched) && priceUsable ? price.total_minor : form.suggested_minor;
+          if (sug == null || form.stay_minor == null || sug === form.stay_minor) return null;
+          const diff = form.stay_minor - sug;
+          return (
+            <>
+              <Row label="Önerilen (fiyat listesi)" value={money(sug, form.currency)} />
+              <Row
+                label="Anlaşılan fark"
+                value={`${diff > 0 ? '+' : '−'}${money(Math.abs(diff), form.currency)} (${diff > 0 ? '+' : '−'}%${Math.abs(Math.round((diff / sug) * 1000) / 10).toString().replace('.', ',')})`}
+                color={diff < 0 ? c.terra : c.ok}
+              />
+            </>
+          );
+        })()}
+        <KurKarsiligi amount={form.gross_minor} currency={form.currency} label="Bugünkü kurla" />
+        {existing?.created_at ? (
+          <KurKarsiligi amount={form.gross_minor} currency={form.currency} date={localDateOf(existing.created_at)} label={`Rezervasyon günü kuruyla (${fmt(localDateOf(existing.created_at))})`} />
+        ) : null}
       </Card>
 
       {/* Acente */}
@@ -855,6 +881,19 @@ function OdemeDuzenle(props: {
                 <Chip key={cur} label={cur} selected={p.currency === cur} onPress={() => setP({ ...p, currency: cur })} />
               ))}
             </ChipRow>
+            {foreign && !rate.trim() ? (
+              <Button
+                title={`TCMB kurunu kullan (${fmt(p.paid_on)})`}
+                kind="ghost"
+                small
+                icon="swap-horizontal"
+                onPress={async () => {
+                  const r = await getRates(p.paid_on);
+                  if (r) setRate(String(Math.round(crossRate(p.currency, props.resCurrency, r) * 10000) / 10000).replace('.', ','));
+                  else setErr('TCMB kuru alınamadı; kuru elle yaz.');
+                }}
+              />
+            ) : null}
             {foreign ? (
               <Field
                 label={`Kur: 1 ${p.currency} = ? ${props.resCurrency}`}
